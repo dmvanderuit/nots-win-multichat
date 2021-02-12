@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutliChatClient", "MutliChatClient\MutliChatClient.csproj", "{B3FCE48A-4D48-4103-B339-1DD97B310D2B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiChatServer", "MultiChatServer\MultiChatServer.csproj", "{C3C8D292-6923-42CB-9B64-A23E6B6AFD3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiChatCore", "MultiChatCore\MultiChatCore.csproj", "{3455C96D-4838-4609-8470-16E79312D7DE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B3FCE48A-4D48-4103-B339-1DD97B310D2B}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{B3FCE48A-4D48-4103-B339-1DD97B310D2B}.Debug|Any CPU.Build.0 = Debug|x86
+		{B3FCE48A-4D48-4103-B339-1DD97B310D2B}.Release|Any CPU.ActiveCfg = Release|x86
+		{B3FCE48A-4D48-4103-B339-1DD97B310D2B}.Release|Any CPU.Build.0 = Release|x86
+		{C3C8D292-6923-42CB-9B64-A23E6B6AFD3E}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{C3C8D292-6923-42CB-9B64-A23E6B6AFD3E}.Debug|Any CPU.Build.0 = Debug|x86
+		{C3C8D292-6923-42CB-9B64-A23E6B6AFD3E}.Release|Any CPU.ActiveCfg = Release|x86
+		{C3C8D292-6923-42CB-9B64-A23E6B6AFD3E}.Release|Any CPU.Build.0 = Release|x86
+		{3455C96D-4838-4609-8470-16E79312D7DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3455C96D-4838-4609-8470-16E79312D7DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3455C96D-4838-4609-8470-16E79312D7DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3455C96D-4838-4609-8470-16E79312D7DE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
