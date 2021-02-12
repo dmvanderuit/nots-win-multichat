@@ -47,7 +47,7 @@
         <Reference Include="Xamarin.Mac" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Class1.cs" />
+        <Compile Include="MultiChatCore.cs" />
         <Compile Include="model\Message.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
