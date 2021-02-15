@@ -47,8 +47,10 @@
         <Reference Include="Xamarin.Mac" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="ChatListDelegate.cs" />
         <Compile Include="MultiChatCore.cs" />
         <Compile Include="model\Message.cs" />
+        <Compile Include="ChatListDataSource.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>
