@@ -45,30 +45,36 @@
         <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="System"/>
-        <Reference Include="System.Core"/>
-        <Reference Include="Xamarin.Mac"/>
+        <Reference Include="System" />
+        <Reference Include="System.Core" />
+        <Reference Include="Xamarin.Mac" />
     </ItemGroup>
     <ItemGroup>
-        <ImageAsset Include="Assets.xcassets\Contents.json"/>
+        <ImageAsset Include="Assets.xcassets\Contents.json" />
     </ItemGroup>
     <ItemGroup>
-        <Folder Include="Resources\"/>
+        <Folder Include="Resources\" />
     </ItemGroup>
     <ItemGroup>
-        <None Include="Info.plist"/>
-        <None Include="Entitlements.plist"/>
+        <None Include="Info.plist" />
+        <None Include="Entitlements.plist" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Main.cs"/>
-        <Compile Include="AppDelegate.cs"/>
-        <Compile Include="ViewController.cs"/>
+        <Compile Include="Main.cs" />
+        <Compile Include="AppDelegate.cs" />
+        <Compile Include="ViewController.cs" />
         <Compile Include="ViewController.designer.cs">
             <DependentUpon>ViewController.cs</DependentUpon>
         </Compile>
     </ItemGroup>
     <ItemGroup>
-        <InterfaceDefinition Include="Main.storyboard"/>
+        <InterfaceDefinition Include="Main.storyboard" />
     </ItemGroup>
-    <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets"/>
+    <ItemGroup>
+      <ProjectReference Include="..\MultiChatCore\MultiChatCore.csproj">
+        <Project>{3455c96d-4838-4609-8470-16e79312d7de}</Project>
+        <Name>MultiChatCore</Name>
+      </ProjectReference>
+    </ItemGroup>
+    <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
 </Project>
