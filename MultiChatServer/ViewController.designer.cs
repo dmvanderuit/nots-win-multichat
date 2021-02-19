@@ -39,6 +39,12 @@ namespace MultiChatServer
 
 		[Outlet]
 		AppKit.NSTextField EnteredServerPort { get; set; }
+		
+		[Outlet] 
+		AppKit.NSButton StartStopButton { get; set; }		
+		
+		[Outlet] 
+		AppKit.NSButton SendMessageButton { get; set; }
 
 		[Action ("SendMessage:")]
 		partial void SendMessage (Foundation.NSObject sender);

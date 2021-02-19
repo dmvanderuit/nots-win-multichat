@@ -704,7 +704,7 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="9aD-Cr-jPi">
-                                                            <rect key="frame" x="8" y="0.0" width="114" height="24"/>
+                                                            <rect key="frame" x="18" y="0.0" width="114" height="24"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Jak-1g-761">
@@ -736,11 +736,11 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="K0d-Fq-WaU">
-                                                            <rect key="frame" x="139" y="0.0" width="997" height="24"/>
+                                                            <rect key="frame" x="149" y="0.0" width="250" height="24"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aZQ-mA-vxC">
-                                                                    <rect key="frame" x="0.0" y="4" width="997" height="16"/>
+                                                                    <rect key="frame" x="0.0" y="4" width="250" height="16"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="ga5-DG-vdl">
                                                                         <font key="font" usesAppearanceFont="YES"/>
@@ -901,11 +901,11 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="Feg-VT-Gkd">
-                                                            <rect key="frame" x="8" y="0.0" width="703" height="24"/>
+                                                            <rect key="frame" x="18" y="0.0" width="164" height="24"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gmt-0p-GKj">
-                                                                    <rect key="frame" x="0.0" y="4" width="703" height="16"/>
+                                                                    <rect key="frame" x="0.0" y="4" width="164" height="16"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="Z04-3i-GZs">
                                                                         <font key="font" usesAppearanceFont="YES"/>
@@ -945,8 +945,11 @@
                         <outlet property="EnteredMessage" destination="Wf7-1V-GZt" id="aIN-ST-o2N"/>
                         <outlet property="EnteredServerName" destination="jXd-iA-OeI" id="f7G-7f-9SY"/>
                         <outlet property="EnteredServerPort" destination="T1k-0H-h3O" id="ek8-8i-gyL"/>
+                        <outlet property="SendButton" destination="skm-Ed-BFS" id="v4R-63-qUb"/>
                         <outlet property="SendMessage" destination="skm-Ed-BFS" id="CDm-O5-BGr"/>
+                        <outlet property="SendMessageButton" destination="skm-Ed-BFS" id="CLY-U5-BT7"/>
                         <outlet property="StartServer" destination="4cY-gp-yKY" id="Ejf-iQ-KQf"/>
+                        <outlet property="StartStopButton" destination="4cY-gp-yKY" id="uOe-bf-2ys"/>
                     </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

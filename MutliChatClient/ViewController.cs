@@ -14,6 +14,7 @@ namespace MutliChatClient
     {
         private ChatListDataSource _chatListDataSource;
         private NetworkStream _ns;
+        private bool _isConnected;
 
         private void AddMessage(Message message)
         {
@@ -25,11 +26,12 @@ namespace MutliChatClient
 
             _chatListDataSource.Messages.Add(message);
             ChatList.ReloadData();
+            ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count -1);
         }
 
         private async Task ReceiveData(TcpClient client)
         {
-            while (true)
+            while (_isConnected)
             {
                 var readBytes = new byte[1];
                 var messageContent = "";
@@ -45,6 +47,13 @@ namespace MutliChatClient
                 var message = Serialization.Deserialize(finalMessageContent);
 
                 AddMessage(message);
+
+                if (message.type == MessageType.ServerStopped)
+                {
+                    _ns = null;
+
+                    SetDisconnected();
+                }
             }
         }
 
@@ -66,23 +75,24 @@ namespace MutliChatClient
                 DateTime.Now);
 
             AddMessage(noMessages);
+
+            SendButton.Enabled = false;
         }
 
         async partial void Connect(NSObject sender)
         {
             var enteredPort = -1;
-            var serverIPString = EnteredIPAddress.StringValue.Trim();
-            IPAddress serverIP;
+            var serverIpString = EnteredIPAddress.StringValue.Trim();
 
             // IP validation
-            if (serverIPString == "")
+            if (serverIpString == "")
             {
                 UI.ShowAlert("Provide server IP",
                     "Please provide a server IP in order to connect to the server.");
                 return;
             }
 
-            if (IPAddress.TryParse(serverIPString, out serverIP) == false)
+            if (IPAddress.TryParse(serverIpString, out var serverIp) == false)
             {
                 UI.ShowAlert("Invalid server ip",
                     "The IP Address you entered was invalid.");
@@ -108,26 +118,104 @@ namespace MutliChatClient
                 return;
             }
 
+            if (!_isConnected)
+            {
+                await ConnectToServer(serverIp, enteredPort);
+            }
+            else
+            {
+                await DisconnectFromServer();
+            }
+        }
+
+        private async Task DisconnectFromServer()
+        {
+            SetDisconnected();
+            var message = new Message(
+                MessageType.Disconnect,
+                "Client",
+                "",
+                DateTime.Now);
+
+            await Messaging.SendMessage(message, _ns);
+
+            var endedMessage = new Message(
+                MessageType.Info,
+                "system",
+                "Disconnected from the server",
+                DateTime.Now);
+            AddMessage(endedMessage);
+
+            _ns = null;
+        }
+
+        private async Task ConnectToServer(IPAddress serverIp, int enteredPort)
+        {
             try
             {
-                using (var tcpClient = new TcpClient(serverIP.ToString(), enteredPort)
+                using (var tcpClient = new TcpClient(serverIp.ToString(), enteredPort)
                 )
                 {
+                    SetConnected();
                     var connectedMessage = new Message(
                         MessageType.Info,
                         "system",
                         "Connected to the server",
                         DateTime.Now);
                     AddMessage(connectedMessage);
+                    while (_isConnected)
+                    {
+                        try
+                        {
+                            _ns = tcpClient.GetStream();
 
-                    _ns = tcpClient.GetStream();
-                    await ReceiveData(tcpClient);
+                            var handshakeMessage = new Message(MessageType.Handshake, "Client", "",
+                                DateTime.Now);
+
+                            await Messaging.SendMessage(handshakeMessage, _ns);
+                            await ReceiveData(tcpClient);
+                        }
+                        catch (Exception e)
+                        {
+                            if (e is ObjectDisposedException || e is NullReferenceException)
+                            {
+                                return;
+                            }
+
+                            UI.ShowExceptionAlert("An unexpected error occured", e);
+                        }
+                    }
                 }
             }
             catch (SocketException socketException)
             {
                 UI.ShowExceptionAlert("Server error", socketException);
+                SetDisconnected();
             }
+        }
+
+        private void SetDisconnected()
+        {
+            _isConnected = false;
+            EnteredName.Editable = true;
+            EnteredIPAddress.Editable = true;
+            EnteredPort.Editable = true;
+            EnteredBufferSize.Editable = true;
+
+            ConnectButton.Title = "Connect";
+            SendButton.Enabled = false;
+        }
+
+        private void SetConnected()
+        {
+            _isConnected = true;
+            EnteredName.Editable = false;
+            EnteredIPAddress.Editable = false;
+            EnteredPort.Editable = false;
+            EnteredBufferSize.Editable = false;
+
+            ConnectButton.Title = "Disconnect";
+            SendButton.Enabled = true;
         }
 
 
@@ -135,7 +223,7 @@ namespace MutliChatClient
         {
             var messageContent = EnteredMessage.StringValue;
 
-            if (!messageContent.Trim().Equals(""))
+            if (!messageContent.Trim().Equals("") && _isConnected)
             {
                 EnteredMessage.StringValue = "";
                 var message = new Message(
@@ -143,7 +231,7 @@ namespace MutliChatClient
                     "Client",
                     messageContent,
                     DateTime.Now);
- 
+
                 await Messaging.SendMessage(message, _ns);
             }
         }
