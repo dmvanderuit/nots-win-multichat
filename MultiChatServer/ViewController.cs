@@ -30,7 +30,7 @@ namespace MultiChatServer
 
             _chatListDataSource.Messages.Add(message);
             ChatList.ReloadData();
-            ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count -1);
+            ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count - 1);
         }
 
         private void AddClient(String username)
@@ -76,9 +76,8 @@ namespace MultiChatServer
                     await BroadcastMessage(leftMessage);
                     return;
                 }
-                
-                AddMessage(message);
 
+                AddMessage(message);
                 await BroadcastMessage(message);
             }
         }
@@ -162,7 +161,7 @@ namespace MultiChatServer
             _connectedStreams.Clear();
 
             _tcpListener.Stop();
-            _serverStarted = false;
+            SetServerStopped();
 
             var endedMessage = new Message(
                 MessageType.Info,
@@ -174,9 +173,18 @@ namespace MultiChatServer
 
         private async Task StartServer(int enteredPort)
         {
+            SetServerStarted();
             _tcpListener = new TcpListener(IPAddress.Any, enteredPort);
-            _tcpListener.Start();
-            _serverStarted = true;
+            try
+            {
+                _tcpListener.Start();
+            }
+            catch (SocketException)
+            {
+                UI.ShowAlert("Couldn't start server", "The entered IP is already in use.");
+                SetServerStopped();
+            }
+
             var listeningMessage = new Message(
                 MessageType.Info,
                 "system",
@@ -195,6 +203,24 @@ namespace MultiChatServer
                 {
                 }
             }
+        }
+
+        private void SetServerStarted()
+        {
+            _serverStarted = true;
+            EnteredServerName.Editable = false;
+            EnteredServerPort.Editable = false;
+            EnteredBufferSize.Editable = false;
+            StartStopButton.Title = "Stop Server";
+        }
+
+        private void SetServerStopped()
+        {
+            _serverStarted = false;
+            EnteredServerName.Editable = true;
+            EnteredServerPort.Editable = true;
+            EnteredBufferSize.Editable = true;
+            StartStopButton.Title = "Start Server";
         }
     }
 }

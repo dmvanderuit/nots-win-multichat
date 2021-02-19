@@ -945,10 +945,11 @@
                         <outlet property="EnteredMessage" destination="Wf7-1V-GZt" id="aIN-ST-o2N"/>
                         <outlet property="EnteredServerName" destination="jXd-iA-OeI" id="f7G-7f-9SY"/>
                         <outlet property="EnteredServerPort" destination="T1k-0H-h3O" id="ek8-8i-gyL"/>
+                        <outlet property="SendButton" destination="skm-Ed-BFS" id="v4R-63-qUb"/>
                         <outlet property="SendMessage" destination="skm-Ed-BFS" id="CDm-O5-BGr"/>
                         <outlet property="SendMessageButton" destination="skm-Ed-BFS" id="CLY-U5-BT7"/>
                         <outlet property="StartServer" destination="4cY-gp-yKY" id="Ejf-iQ-KQf"/>
-                        <outlet property="StartStopButton" destination="4cY-gp-yKY" id="7jm-LJ-vdu"/>
+                        <outlet property="StartStopButton" destination="4cY-gp-yKY" id="uOe-bf-2ys"/>
                     </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
