@@ -43,12 +43,12 @@ namespace MultiChatServer
 
             _clientListDataSource.Clients.Add(username);
             ClientList.ReloadData();
+            ClientList.ScrollRowToVisible(_clientListDataSource.Clients.Count - 1);
         }
 
         private async Task ReceiveData(TcpClient client)
         {
             var stream = client.GetStream();
-            _connectedStreams.Add(stream);
 
             while (_serverStarted)
             {
@@ -65,20 +65,44 @@ namespace MultiChatServer
 
                 var message = Serialization.Deserialize(finalMessageContent);
 
-                if (message.type == MessageType.Disconnect)
+                switch (message.type)
                 {
-                    _connectedStreams.Remove(stream);
+                    case MessageType.Disconnect:
+                        _connectedStreams.Remove(stream);
 
-                    var leftMessage = new Message(MessageType.Info, "System",
-                        $"{message.sender} just left the server.", DateTime.Now);
+                        var leftMessage = new Message(MessageType.Info, "System",
+                            $"{message.sender} just left the server.", DateTime.Now);
 
-                    AddMessage(leftMessage);
-                    await BroadcastMessage(leftMessage);
-                    return;
+                        AddMessage(leftMessage);
+                        await BroadcastMessage(leftMessage);
+                        break;
+                    case MessageType.Handshake:
+                        if (_clientListDataSource.Clients.Contains(message.sender))
+                        {
+                            var duplicateNameMessage = new Message(MessageType.Error, "System",
+                                "The username you are trying to connect with is already in use", DateTime.Now);
+                            var serverInfoMessage = new Message(MessageType.Info, "System",
+                                $"A user with duplicate name {message.sender} was denied to connect.", DateTime.Now);
+                            await Messaging.SendMessage(duplicateNameMessage, stream);
+                            AddMessage(serverInfoMessage);
+                        }
+                        else
+                        {
+                            _connectedStreams.Add(stream);
+                            AddClient(message.sender);
+
+                            var joinedMessage = new Message(MessageType.Info, "System",
+                                $"{message.sender} just joined the server!", DateTime.Now);
+                            AddMessage(joinedMessage);
+                            await BroadcastMessage(joinedMessage);
+                        }
+
+                        break;
+                    default:
+                        AddMessage(message);
+                        await BroadcastMessage(message);
+                        break;
                 }
-
-                AddMessage(message);
-                await BroadcastMessage(message);
             }
         }
 

@@ -14,6 +14,8 @@ namespace MutliChatClient
     {
         private ChatListDataSource _chatListDataSource;
         private NetworkStream _ns;
+
+        private string _username;
         private bool _isConnected;
 
         private void AddMessage(Message message)
@@ -26,7 +28,7 @@ namespace MutliChatClient
 
             _chatListDataSource.Messages.Add(message);
             ChatList.ReloadData();
-            ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count -1);
+            ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count - 1);
         }
 
         private async Task ReceiveData(TcpClient client)
@@ -81,8 +83,17 @@ namespace MutliChatClient
 
         async partial void Connect(NSObject sender)
         {
-            var enteredPort = -1;
+            var enteredUsername = EnteredName.StringValue.Trim();
             var serverIpString = EnteredIPAddress.StringValue.Trim();
+            var enteredPort = -1;
+
+            if (enteredUsername == "")
+            {
+                UI.ShowAlert("Provide username", 
+                    "Please provide a username in order to connect to the server");
+                return;
+            }
+            _username = enteredUsername;
 
             // IP validation
             if (serverIpString == "")
@@ -117,7 +128,7 @@ namespace MutliChatClient
                     "Please provide a server port in order to connect to the server.");
                 return;
             }
-
+            
             if (!_isConnected)
             {
                 await ConnectToServer(serverIp, enteredPort);
@@ -133,7 +144,7 @@ namespace MutliChatClient
             SetDisconnected();
             var message = new Message(
                 MessageType.Disconnect,
-                "Client",
+                _username,
                 "",
                 DateTime.Now);
 
@@ -169,7 +180,7 @@ namespace MutliChatClient
                         {
                             _ns = tcpClient.GetStream();
 
-                            var handshakeMessage = new Message(MessageType.Handshake, "Client", "",
+                            var handshakeMessage = new Message(MessageType.Handshake, _username, "",
                                 DateTime.Now);
 
                             await Messaging.SendMessage(handshakeMessage, _ns);
@@ -197,6 +208,8 @@ namespace MutliChatClient
         private void SetDisconnected()
         {
             _isConnected = false;
+            _username = null;
+            
             EnteredName.Editable = true;
             EnteredIPAddress.Editable = true;
             EnteredPort.Editable = true;
@@ -228,7 +241,7 @@ namespace MutliChatClient
                 EnteredMessage.StringValue = "";
                 var message = new Message(
                     MessageType.Info,
-                    "Client",
+                    _username,
                     messageContent,
                     DateTime.Now);
 
