@@ -16,6 +16,8 @@ namespace MultiChatServer
         private ChatListDataSource _chatListDataSource;
         private ClientListDataSource _clientListDataSource;
         private readonly List<NetworkStream> _connectedStreams = new List<NetworkStream>();
+        private bool _serverStarted = false;
+        private TcpListener _tcpListener;
 
         private void AddMessage(Message message)
         {
@@ -28,6 +30,7 @@ namespace MultiChatServer
 
             _chatListDataSource.Messages.Add(message);
             ChatList.ReloadData();
+            ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count -1);
         }
 
         private void AddClient(String username)
@@ -44,17 +47,10 @@ namespace MultiChatServer
 
         private async Task ReceiveData(TcpClient client)
         {
-            var connectedMessage = new Message(
-                MessageType.Info,
-                "system",
-                "Connected a new server",
-                DateTime.Now);
-            AddMessage(connectedMessage);
-
             var stream = client.GetStream();
             _connectedStreams.Add(stream);
 
-            while (true)
+            while (_serverStarted)
             {
                 var readBytes = new byte[1024];
                 var messageContent = "";
@@ -69,12 +65,29 @@ namespace MultiChatServer
 
                 var message = Serialization.Deserialize(finalMessageContent);
 
+                if (message.type == MessageType.Disconnect)
+                {
+                    _connectedStreams.Remove(stream);
+
+                    var leftMessage = new Message(MessageType.Info, "System",
+                        $"{message.sender} just left the server.", DateTime.Now);
+
+                    AddMessage(leftMessage);
+                    await BroadcastMessage(leftMessage);
+                    return;
+                }
+                
                 AddMessage(message);
 
-                foreach (var connectedStream in _connectedStreams)
-                {
-                    await Messaging.SendMessage(message, connectedStream);
-                }
+                await BroadcastMessage(message);
+            }
+        }
+
+        private async Task BroadcastMessage(Message message)
+        {
+            foreach (var connectedStream in _connectedStreams)
+            {
+                await Messaging.SendMessage(message, connectedStream);
             }
         }
 
@@ -129,20 +142,58 @@ namespace MultiChatServer
                 return;
             }
 
-            var tcpListener = new TcpListener(IPAddress.Any, enteredPort);
-            tcpListener.Start();
+
+            if (_serverStarted)
+            {
+                await StopServer();
+            }
+            else
+            {
+                await StartServer(enteredPort);
+            }
+        }
+
+        private async Task StopServer()
+        {
+            var globalStoppedMessage = new Message(
+                MessageType.ServerStopped, "System", "The server was stopped.", DateTime.Now);
+            await BroadcastMessage(globalStoppedMessage);
+
+            _connectedStreams.Clear();
+
+            _tcpListener.Stop();
+            _serverStarted = false;
+
+            var endedMessage = new Message(
+                MessageType.Info,
+                "system",
+                "Server was stopped",
+                DateTime.Now);
+            AddMessage(endedMessage);
+        }
+
+        private async Task StartServer(int enteredPort)
+        {
+            _tcpListener = new TcpListener(IPAddress.Any, enteredPort);
+            _tcpListener.Start();
+            _serverStarted = true;
             var listeningMessage = new Message(
                 MessageType.Info,
                 "system",
                 "Server started and listening for clients",
                 DateTime.Now);
             AddMessage(listeningMessage);
-            
-            while (true)
-            {
-                var client = await tcpListener.AcceptTcpClientAsync();
 
-                await ReceiveData(client);
+            while (_serverStarted)
+            {
+                try
+                {
+                    var client = await _tcpListener.AcceptTcpClientAsync();
+                    await ReceiveData(client);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }
         }
     }

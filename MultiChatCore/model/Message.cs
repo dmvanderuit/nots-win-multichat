@@ -7,7 +7,9 @@ namespace MultiChatCore.model
     public enum MessageType
     {
         Handshake,
+        Disconnect,
         Error,
+        ServerStopped,
         Message,
         Info
     }

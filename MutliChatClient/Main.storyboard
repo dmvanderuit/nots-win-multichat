@@ -854,11 +854,13 @@
                         <outlet property="ChatListMessageColumn" destination="3g7-we-63p" id="Qbd-0Q-UxY"/>
                         <outlet property="ChatListSenderColumn" destination="Gzp-bn-GEp" id="SwX-NH-Dgt"/>
                         <outlet property="Connect" destination="b5T-at-lUJ" id="dnF-vw-b7M"/>
+                        <outlet property="ConnectButton" destination="b5T-at-lUJ" id="4V9-1q-nAP"/>
                         <outlet property="EnteredBufferSize" destination="mjf-s7-bdf" id="ch6-mx-3wp"/>
                         <outlet property="EnteredIPAddress" destination="hm2-CH-Mwf" id="ciO-TR-lI7"/>
                         <outlet property="EnteredMessage" destination="roy-Nq-LfZ" id="vA9-uZ-H4D"/>
                         <outlet property="EnteredName" destination="LZx-ix-FSx" id="E3l-VZ-lU0"/>
                         <outlet property="EnteredPort" destination="ytC-bi-32s" id="TlP-fO-v3a"/>
+                        <outlet property="SendButton" destination="O5c-WB-JYn" id="gNS-rx-hmD"/>
                     </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

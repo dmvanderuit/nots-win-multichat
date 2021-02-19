@@ -23,6 +23,9 @@ namespace MutliChatClient
 		AppKit.NSTableColumn ChatListSenderColumn { get; set; }
 
 		[Outlet]
+		AppKit.NSButton ConnectButton { get; set; }
+
+		[Outlet]
 		AppKit.NSTextField EnteredBufferSize { get; set; }
 
 		[Outlet]
@@ -37,6 +40,9 @@ namespace MutliChatClient
 		[Outlet]
 		AppKit.NSTextField EnteredPort { get; set; }
 
+		[Outlet]
+		AppKit.NSButton SendButton { get; set; }
+
 		[Action ("Connect:")]
 		partial void Connect (Foundation.NSObject sender);
 
@@ -50,14 +56,24 @@ namespace MutliChatClient
 				ChatList = null;
 			}
 
+			if (ChatListMessageColumn != null) {
+				ChatListMessageColumn.Dispose ();
+				ChatListMessageColumn = null;
+			}
+
 			if (ChatListSenderColumn != null) {
 				ChatListSenderColumn.Dispose ();
 				ChatListSenderColumn = null;
 			}
 
-			if (ChatListMessageColumn != null) {
-				ChatListMessageColumn.Dispose ();
-				ChatListMessageColumn = null;
+			if (EnteredBufferSize != null) {
+				EnteredBufferSize.Dispose ();
+				EnteredBufferSize = null;
+			}
+
+			if (EnteredIPAddress != null) {
+				EnteredIPAddress.Dispose ();
+				EnteredIPAddress = null;
 			}
 
 			if (EnteredMessage != null) {
@@ -70,19 +86,19 @@ namespace MutliChatClient
 				EnteredName = null;
 			}
 
-			if (EnteredIPAddress != null) {
-				EnteredIPAddress.Dispose ();
-				EnteredIPAddress = null;
-			}
-
 			if (EnteredPort != null) {
 				EnteredPort.Dispose ();
 				EnteredPort = null;
 			}
 
-			if (EnteredBufferSize != null) {
-				EnteredBufferSize.Dispose ();
-				EnteredBufferSize = null;
+			if (SendButton != null) {
+				SendButton.Dispose ();
+				SendButton = null;
+			}
+
+			if (ConnectButton != null) {
+				ConnectButton.Dispose ();
+				ConnectButton = null;
 			}
 
 		}
