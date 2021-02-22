@@ -17,6 +17,7 @@ namespace MultiChatServer
         private ClientListDataSource _clientListDataSource;
         private readonly List<NetworkStream> _connectedStreams = new List<NetworkStream>();
         private bool _serverStarted = false;
+        private string _serverName;
         private TcpListener _tcpListener;
 
         private void AddMessage(Message message)
@@ -43,12 +44,27 @@ namespace MultiChatServer
 
             _clientListDataSource.Clients.Add(username);
             ClientList.ReloadData();
+            ClientList.ScrollRowToVisible(_clientListDataSource.Clients.Count - 1);
+        }
+
+        private void RemoveClient(String username)
+        {
+            _clientListDataSource.Clients.Remove(username);
+
+            if (_clientListDataSource.Clients.Count == 0)
+            {
+                var noClients = "No clients yet";
+
+                AddClient(noClients);
+            }
+
+            ClientList.ReloadData();
+            ClientList.ScrollRowToVisible(_clientListDataSource.Clients.Count - 1);
         }
 
         private async Task ReceiveData(TcpClient client)
         {
             var stream = client.GetStream();
-            _connectedStreams.Add(stream);
 
             while (_serverStarted)
             {
@@ -65,20 +81,44 @@ namespace MultiChatServer
 
                 var message = Serialization.Deserialize(finalMessageContent);
 
-                if (message.type == MessageType.Disconnect)
+                switch (message.type)
                 {
-                    _connectedStreams.Remove(stream);
+                    case MessageType.Disconnect:
+                        _connectedStreams.Remove(stream);
+                        RemoveClient(message.sender);
+                        var leftMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                            $"{message.sender} just left the server.", DateTime.Now);
 
-                    var leftMessage = new Message(MessageType.Info, "System",
-                        $"{message.sender} just left the server.", DateTime.Now);
+                        AddMessage(leftMessage);
+                        await BroadcastMessage(leftMessage);
+                        break;
+                    case MessageType.Handshake:
+                        if (_clientListDataSource.Clients.Contains(message.sender))
+                        {
+                            var duplicateNameMessage = new Message(MessageType.Error, $"{_serverName} (server)",
+                                "The username you are trying to connect with is already in use", DateTime.Now);
+                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                                $"A user with duplicate name {message.sender} was denied to connect.", DateTime.Now);
+                            await Messaging.SendMessage(duplicateNameMessage, stream);
+                            AddMessage(serverInfoMessage);
+                        }
+                        else
+                        {
+                            _connectedStreams.Add(stream);
+                            AddClient(message.sender);
 
-                    AddMessage(leftMessage);
-                    await BroadcastMessage(leftMessage);
-                    return;
+                            var joinedMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                                $"{message.sender} just joined the server!", DateTime.Now);
+                            AddMessage(joinedMessage);
+                            await BroadcastMessage(joinedMessage);
+                        }
+
+                        break;
+                    default:
+                        AddMessage(message);
+                        await BroadcastMessage(message);
+                        break;
                 }
-
-                AddMessage(message);
-                await BroadcastMessage(message);
             }
         }
 
@@ -108,7 +148,7 @@ namespace MultiChatServer
 
             var noMessages = new Message(
                 MessageType.Info,
-                "system",
+                "System",
                 "No messages yet",
                 DateTime.Now);
 
@@ -120,7 +160,16 @@ namespace MultiChatServer
 
         async partial void StartServer(NSObject sender)
         {
+            var enteredServerName = EnteredServerName.StringValue.Trim();
             var enteredPort = -1;
+
+            if (enteredServerName == "")
+            {
+                UI.ShowAlert("Provide server name", "Please provide a server name in order to start the server.");
+                return;
+            }
+
+            _serverName = enteredServerName;
 
             // Port validation
             try
@@ -155,7 +204,7 @@ namespace MultiChatServer
         private async Task StopServer()
         {
             var globalStoppedMessage = new Message(
-                MessageType.ServerStopped, "System", "The server was stopped.", DateTime.Now);
+                MessageType.ServerStopped, $"{_serverName} (server)", "The server was stopped.", DateTime.Now);
             await BroadcastMessage(globalStoppedMessage);
 
             _connectedStreams.Clear();
@@ -165,7 +214,7 @@ namespace MultiChatServer
 
             var endedMessage = new Message(
                 MessageType.Info,
-                "system",
+                "System",
                 "Server was stopped",
                 DateTime.Now);
             AddMessage(endedMessage);
@@ -187,7 +236,7 @@ namespace MultiChatServer
 
             var listeningMessage = new Message(
                 MessageType.Info,
-                "system",
+                "System",
                 "Server started and listening for clients",
                 DateTime.Now);
             AddMessage(listeningMessage);
@@ -217,6 +266,8 @@ namespace MultiChatServer
         private void SetServerStopped()
         {
             _serverStarted = false;
+            _serverName = null;
+            
             EnteredServerName.Editable = true;
             EnteredServerPort.Editable = true;
             EnteredBufferSize.Editable = true;
