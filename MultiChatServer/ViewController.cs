@@ -17,6 +17,7 @@ namespace MultiChatServer
         private ClientListDataSource _clientListDataSource;
         private readonly List<NetworkStream> _connectedStreams = new List<NetworkStream>();
         private bool _serverStarted = false;
+        private string _serverName;
         private TcpListener _tcpListener;
 
         private void AddMessage(Message message)
@@ -46,6 +47,21 @@ namespace MultiChatServer
             ClientList.ScrollRowToVisible(_clientListDataSource.Clients.Count - 1);
         }
 
+        private void RemoveClient(String username)
+        {
+            _clientListDataSource.Clients.Remove(username);
+
+            if (_clientListDataSource.Clients.Count == 0)
+            {
+                var noClients = "No clients yet";
+
+                AddClient(noClients);
+            }
+
+            ClientList.ReloadData();
+            ClientList.ScrollRowToVisible(_clientListDataSource.Clients.Count - 1);
+        }
+
         private async Task ReceiveData(TcpClient client)
         {
             var stream = client.GetStream();
@@ -69,8 +85,8 @@ namespace MultiChatServer
                 {
                     case MessageType.Disconnect:
                         _connectedStreams.Remove(stream);
-
-                        var leftMessage = new Message(MessageType.Info, "System",
+                        RemoveClient(message.sender);
+                        var leftMessage = new Message(MessageType.Info, $"{_serverName} (server)",
                             $"{message.sender} just left the server.", DateTime.Now);
 
                         AddMessage(leftMessage);
@@ -79,9 +95,9 @@ namespace MultiChatServer
                     case MessageType.Handshake:
                         if (_clientListDataSource.Clients.Contains(message.sender))
                         {
-                            var duplicateNameMessage = new Message(MessageType.Error, "System",
+                            var duplicateNameMessage = new Message(MessageType.Error, $"{_serverName} (server)",
                                 "The username you are trying to connect with is already in use", DateTime.Now);
-                            var serverInfoMessage = new Message(MessageType.Info, "System",
+                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName} (server)",
                                 $"A user with duplicate name {message.sender} was denied to connect.", DateTime.Now);
                             await Messaging.SendMessage(duplicateNameMessage, stream);
                             AddMessage(serverInfoMessage);
@@ -91,7 +107,7 @@ namespace MultiChatServer
                             _connectedStreams.Add(stream);
                             AddClient(message.sender);
 
-                            var joinedMessage = new Message(MessageType.Info, "System",
+                            var joinedMessage = new Message(MessageType.Info, $"{_serverName} (server)",
                                 $"{message.sender} just joined the server!", DateTime.Now);
                             AddMessage(joinedMessage);
                             await BroadcastMessage(joinedMessage);
@@ -132,7 +148,7 @@ namespace MultiChatServer
 
             var noMessages = new Message(
                 MessageType.Info,
-                "system",
+                "System",
                 "No messages yet",
                 DateTime.Now);
 
@@ -144,7 +160,16 @@ namespace MultiChatServer
 
         async partial void StartServer(NSObject sender)
         {
+            var enteredServerName = EnteredServerName.StringValue.Trim();
             var enteredPort = -1;
+
+            if (enteredServerName == "")
+            {
+                UI.ShowAlert("Provide server name", "Please provide a server name in order to start the server.");
+                return;
+            }
+
+            _serverName = enteredServerName;
 
             // Port validation
             try
@@ -179,7 +204,7 @@ namespace MultiChatServer
         private async Task StopServer()
         {
             var globalStoppedMessage = new Message(
-                MessageType.ServerStopped, "System", "The server was stopped.", DateTime.Now);
+                MessageType.ServerStopped, $"{_serverName} (server)", "The server was stopped.", DateTime.Now);
             await BroadcastMessage(globalStoppedMessage);
 
             _connectedStreams.Clear();
@@ -189,7 +214,7 @@ namespace MultiChatServer
 
             var endedMessage = new Message(
                 MessageType.Info,
-                "system",
+                "System",
                 "Server was stopped",
                 DateTime.Now);
             AddMessage(endedMessage);
@@ -211,7 +236,7 @@ namespace MultiChatServer
 
             var listeningMessage = new Message(
                 MessageType.Info,
-                "system",
+                "System",
                 "Server started and listening for clients",
                 DateTime.Now);
             AddMessage(listeningMessage);
@@ -241,6 +266,8 @@ namespace MultiChatServer
         private void SetServerStopped()
         {
             _serverStarted = false;
+            _serverName = null;
+            
             EnteredServerName.Editable = true;
             EnteredServerPort.Editable = true;
             EnteredBufferSize.Editable = true;

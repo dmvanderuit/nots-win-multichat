@@ -89,10 +89,11 @@ namespace MutliChatClient
 
             if (enteredUsername == "")
             {
-                UI.ShowAlert("Provide username", 
-                    "Please provide a username in order to connect to the server");
+                UI.ShowAlert("Provide username",
+                    "Please provide a username in order to connect to the server.");
                 return;
             }
+
             _username = enteredUsername;
 
             // IP validation
@@ -128,7 +129,7 @@ namespace MutliChatClient
                     "Please provide a server port in order to connect to the server.");
                 return;
             }
-            
+
             if (!_isConnected)
             {
                 await ConnectToServer(serverIp, enteredPort);
@@ -141,7 +142,6 @@ namespace MutliChatClient
 
         private async Task DisconnectFromServer()
         {
-            SetDisconnected();
             var message = new Message(
                 MessageType.Disconnect,
                 _username,
@@ -158,6 +158,7 @@ namespace MutliChatClient
             AddMessage(endedMessage);
 
             _ns = null;
+            SetDisconnected();
         }
 
         private async Task ConnectToServer(IPAddress serverIp, int enteredPort)
@@ -209,7 +210,7 @@ namespace MutliChatClient
         {
             _isConnected = false;
             _username = null;
-            
+
             EnteredName.Editable = true;
             EnteredIPAddress.Editable = true;
             EnteredPort.Editable = true;
