@@ -16,7 +16,7 @@ namespace MultiChatServer
         private ChatListDataSource _chatListDataSource;
         private ClientListDataSource _clientListDataSource;
         private readonly List<NetworkStream> _connectedStreams = new List<NetworkStream>();
-        private bool _serverStarted = false;
+        private bool _serverStarted;
         private string _serverName;
         private TcpListener _tcpListener;
 
@@ -29,6 +29,7 @@ namespace MultiChatServer
                 ChatList.StringValue = "";
             }
 
+            
             _chatListDataSource.Messages.Add(message);
             ChatList.ReloadData();
             ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count - 1);
@@ -89,7 +90,6 @@ namespace MultiChatServer
                         var leftMessage = new Message(MessageType.Info, $"{_serverName} (server)",
                             $"{message.sender} just left the server.", DateTime.Now);
 
-                        AddMessage(leftMessage);
                         await BroadcastMessage(leftMessage);
                         break;
                     case MessageType.Handshake:
@@ -109,13 +109,11 @@ namespace MultiChatServer
 
                             var joinedMessage = new Message(MessageType.Info, $"{_serverName} (server)",
                                 $"{message.sender} just joined the server!", DateTime.Now);
-                            AddMessage(joinedMessage);
                             await BroadcastMessage(joinedMessage);
                         }
 
                         break;
                     default:
-                        AddMessage(message);
                         await BroadcastMessage(message);
                         break;
                 }
@@ -124,6 +122,7 @@ namespace MultiChatServer
 
         private async Task BroadcastMessage(Message message)
         {
+            AddMessage(message);
             foreach (var connectedStream in _connectedStreams)
             {
                 await Messaging.SendMessage(message, connectedStream);
@@ -161,7 +160,7 @@ namespace MultiChatServer
         async partial void StartServer(NSObject sender)
         {
             var enteredServerName = EnteredServerName.StringValue.Trim();
-            var enteredPort = -1;
+            int enteredPort;
 
             if (enteredServerName == "")
             {
@@ -190,7 +189,6 @@ namespace MultiChatServer
                 return;
             }
 
-
             if (_serverStarted)
             {
                 await StopServer();
@@ -211,13 +209,6 @@ namespace MultiChatServer
 
             _tcpListener.Stop();
             SetServerStopped();
-
-            var endedMessage = new Message(
-                MessageType.Info,
-                "System",
-                "Server was stopped",
-                DateTime.Now);
-            AddMessage(endedMessage);
         }
 
         private async Task StartServer(int enteredPort)
@@ -246,7 +237,9 @@ namespace MultiChatServer
                 try
                 {
                     var client = await _tcpListener.AcceptTcpClientAsync();
-                    await ReceiveData(client);
+                    var data = ReceiveData(client);
+                    if (data.IsFaulted)
+                        await data;
                 }
                 catch (ObjectDisposedException)
                 {
@@ -272,6 +265,23 @@ namespace MultiChatServer
             EnteredServerPort.Editable = true;
             EnteredBufferSize.Editable = true;
             StartStopButton.Title = "Start Server";
+        }
+
+        async partial void SendMessage(NSObject sender)
+        {
+            var messageContent = EnteredMessage.StringValue;
+
+            if (!messageContent.Trim().Equals("") && _serverStarted)
+            {
+                EnteredMessage.StringValue = "";
+                var message = new Message(
+                    MessageType.Info,
+                    $"{_serverName}",
+                    messageContent,
+                    DateTime.Now);
+
+                await BroadcastMessage(message);
+            }
         }
     }
 }

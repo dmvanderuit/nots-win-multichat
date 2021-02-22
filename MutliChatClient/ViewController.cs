@@ -195,6 +195,7 @@ namespace MutliChatClient
                             }
 
                             UI.ShowExceptionAlert("An unexpected error occured", e);
+                            SetDisconnected();
                         }
                     }
                 }
