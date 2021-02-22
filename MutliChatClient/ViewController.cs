@@ -16,6 +16,8 @@ namespace MutliChatClient
         private NetworkStream _ns;
 
         private string _username;
+        private int _bufferSize;
+        
         private bool _isConnected;
 
         private void AddMessage(Message message)
@@ -35,7 +37,7 @@ namespace MutliChatClient
         {
             while (_isConnected)
             {
-                var readBytes = new byte[1];
+                var readBytes = new byte[_bufferSize];
                 var messageContent = "";
 
                 while (messageContent.IndexOf("@") < 0)
@@ -79,6 +81,7 @@ namespace MutliChatClient
             AddMessage(noMessages);
 
             SendButton.Enabled = false;
+            EnteredBufferSize.StringValue = "1024";
         }
 
         async partial void Connect(NSObject sender)
@@ -86,6 +89,7 @@ namespace MutliChatClient
             var enteredUsername = EnteredName.StringValue.Trim();
             var serverIpString = EnteredIPAddress.StringValue.Trim();
             var enteredPort = -1;
+            var enteredBufferSize = EnteredBufferSize.StringValue.Trim();
 
             if (enteredUsername == "")
             {
@@ -129,10 +133,29 @@ namespace MutliChatClient
                     "Please provide a server port in order to connect to the server.");
                 return;
             }
+            
+            // Buffersize validation
+            try
+            {
+                _bufferSize = Int32.Parse(enteredBufferSize);
+            }
+            catch (FormatException)
+            {
+                UI.ShowAlert("Invalid server buffer size",
+                    "The buffer size you entered is likely not a number. Please enter a valid number.");
+                return;
+            }
+
+            if (enteredBufferSize == "" || _bufferSize <= 0)
+            {
+                UI.ShowAlert("Provide buffer size",
+                    "Please provide a positive buffer size in order to connect to the server.");
+                return;
+            }
 
             if (!_isConnected)
             {
-                await ConnectToServer(serverIp, enteredPort);
+                await ConnectToServer(serverIp, enteredPort, enteredBufferSize);
             }
             else
             {
@@ -161,7 +184,7 @@ namespace MutliChatClient
             SetDisconnected();
         }
 
-        private async Task ConnectToServer(IPAddress serverIp, int enteredPort)
+        private async Task ConnectToServer(IPAddress serverIp, int enteredPort, string bufferSize)
         {
             try
             {
@@ -181,7 +204,7 @@ namespace MutliChatClient
                         {
                             _ns = tcpClient.GetStream();
 
-                            var handshakeMessage = new Message(MessageType.Handshake, _username, "",
+                            var handshakeMessage = new Message(MessageType.Handshake, _username, $"{bufferSize}",
                                 DateTime.Now);
 
                             await Messaging.SendMessage(handshakeMessage, _ns);
@@ -211,6 +234,7 @@ namespace MutliChatClient
         {
             _isConnected = false;
             _username = null;
+            _bufferSize = -1;
 
             EnteredName.Editable = true;
             EnteredIPAddress.Editable = true;

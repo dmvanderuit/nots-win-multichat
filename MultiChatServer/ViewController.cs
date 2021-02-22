@@ -19,6 +19,7 @@ namespace MultiChatServer
         private bool _serverStarted;
         private string _serverName;
         private TcpListener _tcpListener;
+        private int _bufferSize;
 
         private void AddMessage(Message message)
         {
@@ -29,7 +30,7 @@ namespace MultiChatServer
                 ChatList.StringValue = "";
             }
 
-            
+
             _chatListDataSource.Messages.Add(message);
             ChatList.ReloadData();
             ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count - 1);
@@ -69,7 +70,7 @@ namespace MultiChatServer
 
             while (_serverStarted)
             {
-                var readBytes = new byte[1024];
+                var readBytes = new byte[_bufferSize];
                 var messageContent = "";
 
                 while (messageContent.IndexOf("@") < 0)
@@ -96,22 +97,43 @@ namespace MultiChatServer
                         if (_clientListDataSource.Clients.Contains(message.sender))
                         {
                             var duplicateNameMessage = new Message(MessageType.Error, $"{_serverName} (server)",
-                                "The username you are trying to connect with is already in use", DateTime.Now);
+                                "The username you are trying to connect with is already in use.", DateTime.Now);
                             var serverInfoMessage = new Message(MessageType.Info, $"{_serverName} (server)",
                                 $"A user with duplicate name {message.sender} was denied to connect.", DateTime.Now);
                             await Messaging.SendMessage(duplicateNameMessage, stream);
                             AddMessage(serverInfoMessage);
+                            break;
                         }
-                        else
+
+                        var clientBufferSize = -1;
+
+                        try
                         {
-                            _connectedStreams.Add(stream);
-                            AddClient(message.sender);
-
-                            var joinedMessage = new Message(MessageType.Info, $"{_serverName} (server)",
-                                $"{message.sender} just joined the server!", DateTime.Now);
-                            await BroadcastMessage(joinedMessage);
+                            clientBufferSize = Int32.Parse(message.content);
+                        }
+                        catch (FormatException)
+                        {
                         }
 
+                        if (clientBufferSize != _bufferSize)
+                        {
+                            var bufferMismatchMessage = new Message(MessageType.Error, $"{_serverName} (server)",
+                                "The buffer size you entered is either invalid or doesn't match the server buffer size.",
+                                DateTime.Now);
+                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                                $"A user ({message.sender}) with mismatching buffer size of {_bufferSize} was denied to connect.",
+                                DateTime.Now);
+                            await Messaging.SendMessage(bufferMismatchMessage, stream);
+                            AddMessage(serverInfoMessage);
+                            break;
+                        }
+
+                        _connectedStreams.Add(stream);
+                        AddClient(message.sender);
+
+                        var joinedMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                            $"{message.sender} just joined the server!", DateTime.Now);
+                        await BroadcastMessage(joinedMessage);
                         break;
                     default:
                         await BroadcastMessage(message);
@@ -155,11 +177,14 @@ namespace MultiChatServer
 
             AddMessage(noMessages);
             AddClient(noClients);
+
+            EnteredBufferSize.StringValue = "1024";
         }
 
         async partial void StartServer(NSObject sender)
         {
             var enteredServerName = EnteredServerName.StringValue.Trim();
+            var enteredBufferSize = EnteredBufferSize.StringValue.Trim();
             int enteredPort;
 
             if (enteredServerName == "")
@@ -186,6 +211,25 @@ namespace MultiChatServer
             {
                 UI.ShowAlert("Provide server port",
                     "Please provide a server port in order to connect to the server.");
+                return;
+            }
+
+            // Buffersize validation
+            try
+            {
+                _bufferSize = Int32.Parse(enteredBufferSize);
+            }
+            catch (FormatException)
+            {
+                UI.ShowAlert("Invalid server buffer size",
+                    "The buffer size you entered is likely not a number. Please enter a valid number.");
+                return;
+            }
+
+            if (enteredBufferSize == "" || _bufferSize <= 0)
+            {
+                UI.ShowAlert("Provide buffer size",
+                    "Please provide a positive buffer size in order to connect to the server.");
                 return;
             }
 
@@ -260,7 +304,8 @@ namespace MultiChatServer
         {
             _serverStarted = false;
             _serverName = null;
-            
+            _bufferSize = -1;
+
             EnteredServerName.Editable = true;
             EnteredServerPort.Editable = true;
             EnteredBufferSize.Editable = true;
