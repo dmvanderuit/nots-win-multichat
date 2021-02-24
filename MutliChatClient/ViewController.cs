@@ -17,21 +17,9 @@ namespace MutliChatClient
 
         private string _username;
         private int _bufferSize;
-        
+
         private bool _isConnected;
 
-        private void AddMessage(Message message)
-        {
-            if (_chatListDataSource.Messages.Count > 0 &&
-                _chatListDataSource.Messages[0].content.Contains("No messages yet"))
-            {
-                _chatListDataSource.Messages.RemoveAt(0);
-            }
-
-            _chatListDataSource.Messages.Add(message);
-            ChatList.ReloadData();
-            ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count - 1);
-        }
 
         private async Task ReceiveData(TcpClient client)
         {
@@ -50,7 +38,7 @@ namespace MutliChatClient
 
                 var message = Serialization.Deserialize(finalMessageContent);
 
-                AddMessage(message);
+                UI.AddMessage(message, _chatListDataSource, ChatList);
 
                 if (message.type == MessageType.ServerStopped)
                 {
@@ -78,7 +66,7 @@ namespace MutliChatClient
                 "No messages yet",
                 DateTime.Now);
 
-            AddMessage(noMessages);
+            UI.AddMessage(noMessages, _chatListDataSource, ChatList);
 
             SendButton.Enabled = false;
             EnteredBufferSize.StringValue = "1024";
@@ -133,7 +121,7 @@ namespace MutliChatClient
                     "Please provide a server port in order to connect to the server.");
                 return;
             }
-            
+
             // Buffersize validation
             try
             {
@@ -178,7 +166,7 @@ namespace MutliChatClient
                 "system",
                 "Disconnected from the server",
                 DateTime.Now);
-            AddMessage(endedMessage);
+            UI.AddMessage(endedMessage, _chatListDataSource, ChatList);
 
             _ns = null;
             SetDisconnected();
@@ -197,7 +185,7 @@ namespace MutliChatClient
                         "system",
                         "Connected to the server",
                         DateTime.Now);
-                    AddMessage(connectedMessage);
+                    UI.AddMessage(connectedMessage, _chatListDataSource, ChatList);
                     while (_isConnected)
                     {
                         try

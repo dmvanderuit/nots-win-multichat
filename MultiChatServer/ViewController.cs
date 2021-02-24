@@ -21,21 +21,6 @@ namespace MultiChatServer
         private TcpListener _tcpListener;
         private int _bufferSize;
 
-        private void AddMessage(Message message)
-        {
-            if (_chatListDataSource.Messages.Count > 0 &&
-                _chatListDataSource.Messages[0].content.Contains("No messages yet"))
-            {
-                _chatListDataSource.Messages.RemoveAt(0);
-                ChatList.StringValue = "";
-            }
-
-
-            _chatListDataSource.Messages.Add(message);
-            ChatList.ReloadData();
-            ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count - 1);
-        }
-
         private void AddClient(String username)
         {
             if (_clientListDataSource.Clients.Count > 0 &&
@@ -88,7 +73,7 @@ namespace MultiChatServer
                     case MessageType.Disconnect:
                         _connectedStreams.Remove(stream);
                         RemoveClient(message.sender);
-                        var leftMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                        var leftMessage = new Message(MessageType.Info, $"{_serverName}",
                             $"{message.sender} just left the server.", DateTime.Now);
 
                         await BroadcastMessage(leftMessage);
@@ -96,12 +81,12 @@ namespace MultiChatServer
                     case MessageType.Handshake:
                         if (_clientListDataSource.Clients.Contains(message.sender))
                         {
-                            var duplicateNameMessage = new Message(MessageType.Error, $"{_serverName} (server)",
+                            var duplicateNameMessage = new Message(MessageType.Error, $"{_serverName}",
                                 "The username you are trying to connect with is already in use.", DateTime.Now);
-                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName}",
                                 $"A user with duplicate name {message.sender} was denied to connect.", DateTime.Now);
                             await Messaging.SendMessage(duplicateNameMessage, stream);
-                            AddMessage(serverInfoMessage);
+                            UI.AddMessage(serverInfoMessage, _chatListDataSource, ChatList);
                             break;
                         }
 
@@ -117,21 +102,21 @@ namespace MultiChatServer
 
                         if (clientBufferSize != _bufferSize)
                         {
-                            var bufferMismatchMessage = new Message(MessageType.Error, $"{_serverName} (server)",
+                            var bufferMismatchMessage = new Message(MessageType.Error, $"{_serverName}",
                                 "The buffer size you entered is either invalid or doesn't match the server buffer size.",
                                 DateTime.Now);
-                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName}",
                                 $"A user ({message.sender}) with mismatching buffer size of {_bufferSize} was denied to connect.",
                                 DateTime.Now);
                             await Messaging.SendMessage(bufferMismatchMessage, stream);
-                            AddMessage(serverInfoMessage);
+                            UI.AddMessage(serverInfoMessage, _chatListDataSource, ChatList);
                             break;
                         }
 
                         _connectedStreams.Add(stream);
                         AddClient(message.sender);
 
-                        var joinedMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                        var joinedMessage = new Message(MessageType.Info, $"{_serverName}",
                             $"{message.sender} just joined the server!", DateTime.Now);
                         await BroadcastMessage(joinedMessage);
                         break;
@@ -144,7 +129,7 @@ namespace MultiChatServer
 
         private async Task BroadcastMessage(Message message)
         {
-            AddMessage(message);
+            UI.AddMessage(message, _chatListDataSource, ChatList);
             foreach (var connectedStream in _connectedStreams)
             {
                 await Messaging.SendMessage(message, connectedStream);
@@ -175,7 +160,7 @@ namespace MultiChatServer
 
             var noClients = "No clients yet";
 
-            AddMessage(noMessages);
+            UI.AddMessage(noMessages, _chatListDataSource, ChatList);
             AddClient(noClients);
 
             EnteredBufferSize.StringValue = "1024";
@@ -246,7 +231,7 @@ namespace MultiChatServer
         private async Task StopServer()
         {
             var globalStoppedMessage = new Message(
-                MessageType.ServerStopped, $"{_serverName} (server)", "The server was stopped.", DateTime.Now);
+                MessageType.ServerStopped, $"{_serverName}", "The server was stopped.", DateTime.Now);
             await BroadcastMessage(globalStoppedMessage);
 
             _connectedStreams.Clear();
@@ -274,7 +259,7 @@ namespace MultiChatServer
                 "System",
                 "Server started and listening for clients",
                 DateTime.Now);
-            AddMessage(listeningMessage);
+            UI.AddMessage(listeningMessage, _chatListDataSource, ChatList);
 
             while (_serverStarted)
             {

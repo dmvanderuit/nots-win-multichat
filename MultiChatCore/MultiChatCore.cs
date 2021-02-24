@@ -50,5 +50,18 @@ namespace MultiChatCore
             };
             alert.RunModal();
         }
+
+        public static void AddMessage(Message message, ChatListDataSource dataSource, NSTableView chatList)
+        {
+            if (dataSource.Messages.Count > 0 &&
+                dataSource.Messages[0].content.Contains("No messages yet"))
+            {
+                dataSource.Messages.RemoveAt(0);
+            }
+
+            dataSource.Messages.Add(message);
+            chatList.ReloadData();
+            chatList.ScrollRowToVisible(dataSource.Messages.Count - 1);
+        }
     }
 }
