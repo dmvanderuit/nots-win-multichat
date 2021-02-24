@@ -74,76 +74,27 @@ namespace MutliChatClient
 
         async partial void Connect(NSObject sender)
         {
-            var enteredUsername = EnteredName.StringValue.Trim();
-            var serverIpString = EnteredIPAddress.StringValue.Trim();
-            var enteredPort = -1;
-            var enteredBufferSize = EnteredBufferSize.StringValue.Trim();
+            IPAddress serverIp;
+            int enteredPort;
+            int enteredBufferSize;
 
-            if (enteredUsername == "")
-            {
-                UI.ShowAlert("Provide username",
-                    "Please provide a username in order to connect to the server.");
-                return;
-            }
-
-            _username = enteredUsername;
-
-            // IP validation
-            if (serverIpString == "")
-            {
-                UI.ShowAlert("Provide server IP",
-                    "Please provide a server IP in order to connect to the server.");
-                return;
-            }
-
-            if (IPAddress.TryParse(serverIpString, out var serverIp) == false)
-            {
-                UI.ShowAlert("Invalid server ip",
-                    "The IP Address you entered was invalid.");
-                return;
-            }
-
-            // Port validation
             try
             {
-                enteredPort = Int32.Parse(EnteredPort.StringValue.Trim());
+                _username = Validation.ValidateName(EnteredName.StringValue.Trim(), Validation.NameTypes.Client);
+                serverIp = Validation.ValidateIp(EnteredIPAddress.StringValue.Trim());
+                enteredPort = Validation.ValidatePort(EnteredPort.StringValue.Trim());
+                enteredBufferSize = Validation.ValidateBufferSize(EnteredBufferSize.StringValue.Trim());
             }
-            catch (FormatException)
+            catch (InvalidInputException e)
             {
-                UI.ShowAlert("Invalid server port",
-                    "The port you entered was invalid. Please make sure the port is a numeric value.");
-                return;
-            }
-
-            if (enteredPort == -1)
-            {
-                UI.ShowAlert("Provide server port",
-                    "Please provide a server port in order to connect to the server.");
-                return;
-            }
-
-            // Buffersize validation
-            try
-            {
-                _bufferSize = Int32.Parse(enteredBufferSize);
-            }
-            catch (FormatException)
-            {
-                UI.ShowAlert("Invalid server buffer size",
-                    "The buffer size you entered is likely not a number. Please enter a valid number.");
-                return;
-            }
-
-            if (enteredBufferSize == "" || _bufferSize <= 0)
-            {
-                UI.ShowAlert("Provide buffer size",
-                    "Please provide a positive buffer size in order to connect to the server.");
+                UI.ShowAlert(e.Title,
+                    e.Message);
                 return;
             }
 
             if (!_isConnected)
             {
-                await ConnectToServer(serverIp, enteredPort, enteredBufferSize);
+                await ConnectToServer(serverIp, enteredPort, enteredBufferSize.ToString());
             }
             else
             {

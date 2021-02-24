@@ -168,53 +168,19 @@ namespace MultiChatServer
 
         async partial void StartServer(NSObject sender)
         {
-            var enteredServerName = EnteredServerName.StringValue.Trim();
-            var enteredBufferSize = EnteredBufferSize.StringValue.Trim();
             int enteredPort;
 
-            if (enteredServerName == "")
-            {
-                UI.ShowAlert("Provide server name", "Please provide a server name in order to start the server.");
-                return;
-            }
-
-            _serverName = enteredServerName;
-
-            // Port validation
             try
             {
-                enteredPort = Int32.Parse(EnteredServerPort.StringValue.Trim());
+                _serverName =
+                    Validation.ValidateName(EnteredServerName.StringValue.Trim(), Validation.NameTypes.Server);
+                enteredPort = Validation.ValidatePort(EnteredServerPort.StringValue.Trim());
+                _bufferSize = Validation.ValidateBufferSize(EnteredBufferSize.StringValue.Trim());
             }
-            catch (FormatException)
+            catch (InvalidInputException e)
             {
-                UI.ShowAlert("Invalid server port",
-                    "The port you entered was invalid. Please make sure the port is a numeric value.");
-                return;
-            }
-
-            if (enteredPort == -1)
-            {
-                UI.ShowAlert("Provide server port",
-                    "Please provide a server port in order to connect to the server.");
-                return;
-            }
-
-            // Buffersize validation
-            try
-            {
-                _bufferSize = Int32.Parse(enteredBufferSize);
-            }
-            catch (FormatException)
-            {
-                UI.ShowAlert("Invalid server buffer size",
-                    "The buffer size you entered is likely not a number. Please enter a valid number.");
-                return;
-            }
-
-            if (enteredBufferSize == "" || _bufferSize <= 0)
-            {
-                UI.ShowAlert("Provide buffer size",
-                    "Please provide a positive buffer size in order to connect to the server.");
+                UI.ShowAlert(e.Title,
+                    e.Message);
                 return;
             }
 
@@ -295,6 +261,8 @@ namespace MultiChatServer
             EnteredServerPort.Editable = true;
             EnteredBufferSize.Editable = true;
             StartStopButton.Title = "Start Server";
+
+            _clientListDataSource.Clients.Clear();
         }
 
         async partial void SendMessage(NSObject sender)
