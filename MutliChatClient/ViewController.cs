@@ -84,6 +84,7 @@ namespace MutliChatClient
                 serverIp = Validation.ValidateIp(EnteredIPAddress.StringValue.Trim());
                 enteredPort = Validation.ValidatePort(EnteredPort.StringValue.Trim());
                 enteredBufferSize = Validation.ValidateBufferSize(EnteredBufferSize.StringValue.Trim());
+                _bufferSize = enteredBufferSize;
             }
             catch (InvalidInputException e)
             {
