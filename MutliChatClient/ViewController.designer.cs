@@ -41,13 +41,19 @@ namespace MutliChatClient
 		AppKit.NSTextField EnteredPort { get; set; }
 
 		[Outlet]
-		AppKit.NSButton SendButton { get; set; }
+		AppKit.NSButton SendButton { get; set; }		
+		
+		[Outlet]
+		AppKit.NSButton UpdateBufferButton { get; set; }
 
 		[Action ("Connect:")]
 		partial void Connect (Foundation.NSObject sender);
 
 		[Action ("SendMessage:")]
-		partial void SendMessage (Foundation.NSObject sender);
+		partial void SendMessage (Foundation.NSObject sender);		
+		
+		[Action ("UpdateBufferSize:")]
+		partial void UpdateBufferSize (Foundation.NSObject sender);
 
 		void ReleaseDesignerOutlets ()
 		{

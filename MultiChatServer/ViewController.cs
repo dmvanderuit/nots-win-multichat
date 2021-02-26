@@ -325,21 +325,9 @@ namespace MultiChatServer
 
         partial void UpdateBuffersize(NSObject sender)
         {
-            int enteredBufferSize;
-
-            try
-            {
-                enteredBufferSize = Validation.ValidateBufferSize(EnteredBufferSize.StringValue.Trim());
-                _bufferSize = enteredBufferSize;
-                var message = new Message(MessageType.Info, _serverName,
-                    $"The buffer size was changed to {enteredBufferSize}.", DateTime.Now);
-                UI.AddMessage(message, _chatListDataSource, ChatList);
-            }
-            catch (InvalidInputException e)
-            {
-                UI.ShowAlert(e.Title,
-                    e.Message);
-            }
+            var bufferSize = Messaging.UpdateBufferSize(EnteredBufferSize.StringValue.Trim(), _serverName,
+                _chatListDataSource, ChatList);
+            _bufferSize = bufferSize;
         }
     }
 }

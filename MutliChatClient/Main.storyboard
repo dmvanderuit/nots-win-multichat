@@ -704,7 +704,7 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="ZFY-AX-GVC">
-                                                            <rect key="frame" x="18" y="0.0" width="71" height="24"/>
+                                                            <rect key="frame" x="8" y="0.0" width="71" height="24"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xyK-bd-UZK">
@@ -736,11 +736,11 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="OZM-f7-pNV">
-                                                            <rect key="frame" x="106" y="0.0" width="229" height="24"/>
+                                                            <rect key="frame" x="96" y="0.0" width="275" height="24"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hpu-bb-rLl">
-                                                                    <rect key="frame" x="0.0" y="4" width="229" height="16"/>
+                                                                    <rect key="frame" x="0.0" y="4" width="275" height="16"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="X4p-l0-Jdt">
                                                                         <font key="font" usesAppearanceFont="YES"/>
@@ -847,6 +847,17 @@
                                     <action selector="SendMessage:" target="XfG-lQ-9wD" id="hkK-SC-lnj"/>
                                 </connections>
                             </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="k6O-pv-OMR">
+                                <rect key="frame" x="355" y="45" width="120" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Update Buffer" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Yxa-1M-Yen">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="UpdateBufferSize:" target="XfG-lQ-9wD" id="9KK-sU-Oiw"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
@@ -861,6 +872,7 @@
                         <outlet property="EnteredName" destination="LZx-ix-FSx" id="E3l-VZ-lU0"/>
                         <outlet property="EnteredPort" destination="ytC-bi-32s" id="TlP-fO-v3a"/>
                         <outlet property="SendButton" destination="O5c-WB-JYn" id="gNS-rx-hmD"/>
+                        <outlet property="UpdateBufferButton" destination="k6O-pv-OMR" id="iI6-vQ-Kob"/>
                     </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
