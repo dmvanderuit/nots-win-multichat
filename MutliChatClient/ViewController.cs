@@ -183,7 +183,7 @@ namespace MutliChatClient
                         {
                             _ns = tcpClient.GetStream();
 
-                            var handshakeMessage = new Message(MessageType.Handshake, _username, $"{bufferSize}",
+                            var handshakeMessage = new Message(MessageType.Handshake, _username, "",
                                 DateTime.Now);
 
                             await Messaging.SendMessage(handshakeMessage, _ns);

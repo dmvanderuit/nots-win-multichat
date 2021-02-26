@@ -109,29 +109,6 @@ namespace MultiChatServer
                             break;
                         }
 
-                        var clientBufferSize = -1;
-
-                        try
-                        {
-                            clientBufferSize = Int32.Parse(message.content);
-                        }
-                        catch (FormatException)
-                        {
-                        }
-
-                        if (clientBufferSize != _bufferSize) // TODO remove
-                        {
-                            var bufferMismatchMessage = new Message(MessageType.Error, $"{_serverName}",
-                                "The buffer size you entered is either invalid or doesn't match the server buffer size.",
-                                DateTime.Now);
-                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName}",
-                                $"A user ({message.sender}) with mismatching buffer size of {_bufferSize} was denied to connect.",
-                                DateTime.Now);
-                            await Messaging.SendMessage(bufferMismatchMessage, stream);
-                            UI.AddMessage(serverInfoMessage, _chatListDataSource, ChatList);
-                            break;
-                        }
-
                         _connectedStreams.Add(stream);
                         AddClient(message.sender);
 
