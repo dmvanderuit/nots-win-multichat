@@ -28,14 +28,14 @@ namespace MultiChatCore
 
         // ValidateIp validates the IP Address passed as a parameter. It validates if it is not empty and then it parses
         // it to a valid IP address.
-        public static IPAddress ValidateIp(string enteredIp)
+        public static IPAddress ValidateIp(string enteredIp, NameTypes type)
         {
             IPAddress validatedIp;
 
             if (enteredIp == "")
             {
                 throw new InvalidInputException("Provide server IP",
-                    "Please provide a server IP in order to connect to the server.");
+                    $"Please provide a server IP in order to {(type == NameTypes.Client ? "connect to" : "start")} the server.");
             }
 
             if (IPAddress.TryParse(enteredIp, out validatedIp) == false)

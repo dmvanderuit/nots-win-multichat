@@ -35,16 +35,19 @@ namespace MultiChatServer
 		AppKit.NSTextField EnteredMessage { get; set; }
 
 		[Outlet]
+		AppKit.NSTextField EnteredServerIP { get; set; }
+
+		[Outlet]
 		AppKit.NSTextField EnteredServerName { get; set; }
 
 		[Outlet]
 		AppKit.NSTextField EnteredServerPort { get; set; }
-		
-		[Outlet] 
-		AppKit.NSButton StartStopButton { get; set; }		
-		
-		[Outlet] 
+
+		[Outlet]
 		AppKit.NSButton SendMessageButton { get; set; }
+
+		[Outlet]
+		AppKit.NSButton StartStopButton { get; set; }
 
 		[Action ("SendMessage:")]
 		partial void SendMessage (Foundation.NSObject sender);
@@ -79,6 +82,11 @@ namespace MultiChatServer
 				ClientListClientColumn = null;
 			}
 
+			if (EnteredBufferSize != null) {
+				EnteredBufferSize.Dispose ();
+				EnteredBufferSize = null;
+			}
+
 			if (EnteredMessage != null) {
 				EnteredMessage.Dispose ();
 				EnteredMessage = null;
@@ -89,14 +97,24 @@ namespace MultiChatServer
 				EnteredServerName = null;
 			}
 
+			if (EnteredServerIP != null) {
+				EnteredServerIP.Dispose ();
+				EnteredServerIP = null;
+			}
+
 			if (EnteredServerPort != null) {
 				EnteredServerPort.Dispose ();
 				EnteredServerPort = null;
 			}
 
-			if (EnteredBufferSize != null) {
-				EnteredBufferSize.Dispose ();
-				EnteredBufferSize = null;
+			if (StartStopButton != null) {
+				StartStopButton.Dispose ();
+				StartStopButton = null;
+			}
+
+			if (SendMessageButton != null) {
+				SendMessageButton.Dispose ();
+				SendMessageButton = null;
 			}
 
 		}

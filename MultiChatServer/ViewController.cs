@@ -207,12 +207,14 @@ namespace MultiChatServer
         // If all is well, we start the server. If it is already started, we stop it.
         async partial void StartServer(NSObject sender)
         {
+            IPAddress serverIp;
             int enteredPort;
 
             try
             {
                 _serverName =
                     Validation.ValidateName(EnteredServerName.StringValue.Trim(), Validation.NameTypes.Server);
+                serverIp = Validation.ValidateIp(EnteredServerIP.StringValue.Trim(), Validation.NameTypes.Server);
                 enteredPort = Validation.ValidatePort(EnteredServerPort.StringValue.Trim());
                 _bufferSize = Validation.ValidateBufferSize(EnteredBufferSize.StringValue.Trim());
             }
@@ -229,7 +231,7 @@ namespace MultiChatServer
             }
             else
             {
-                await StartServer(enteredPort);
+                await StartServer(serverIp, enteredPort);
             }
         }
 
@@ -255,17 +257,17 @@ namespace MultiChatServer
         // when this exception is thrown.
         // After this, we show the message that the server is listening for new clients. While the server is started,
         // we accept clients (asynchronously) and we receive the data.
-        private async Task StartServer(int enteredPort)
+        private async Task StartServer(IPAddress ipAddress, int enteredPort)
         {
             SetServerStarted();
-            _tcpListener = new TcpListener(IPAddress.Any, enteredPort);
+            _tcpListener = new TcpListener(ipAddress, enteredPort);
             try
             {
                 _tcpListener.Start();
             }
             catch (SocketException)
             {
-                UI.ShowAlert("Couldn't start server", "The entered IP is already in use.");
+                UI.ShowAlert("Couldn't start server", "The entered IP is already in use or can't be used.");
                 SetServerStopped();
             }
 
@@ -296,6 +298,7 @@ namespace MultiChatServer
         {
             _serverStarted = true;
             EnteredServerName.Editable = false;
+            EnteredServerIP.Editable = false;
             EnteredServerPort.Editable = false;
             EnteredBufferSize.Editable = false;
             StartStopButton.Title = "Stop Server";
@@ -312,6 +315,7 @@ namespace MultiChatServer
             _bufferSize = -1;
 
             EnteredServerName.Editable = true;
+            EnteredServerIP.Editable = true;
             EnteredServerPort.Editable = true;
             EnteredBufferSize.Editable = true;
             StartStopButton.Title = "Start Server";
