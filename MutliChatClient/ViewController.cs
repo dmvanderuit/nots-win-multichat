@@ -89,6 +89,7 @@ namespace MutliChatClient
 
             SendButton.Enabled = false;
             EnteredBufferSize.StringValue = "1024";
+            UpdateBufferButton.Enabled = false;
         }
 
         // Connect is the button handler for the connect button. It validates all input fields and shows a UI alert when
@@ -183,7 +184,7 @@ namespace MutliChatClient
                         {
                             _ns = tcpClient.GetStream();
 
-                            var handshakeMessage = new Message(MessageType.Handshake, _username, $"{bufferSize}",
+                            var handshakeMessage = new Message(MessageType.Handshake, _username, "",
                                 DateTime.Now);
 
                             await Messaging.SendMessage(handshakeMessage, _ns);
@@ -220,7 +221,7 @@ namespace MutliChatClient
             EnteredName.Editable = true;
             EnteredIPAddress.Editable = true;
             EnteredPort.Editable = true;
-            EnteredBufferSize.Editable = true;
+            UpdateBufferButton.Enabled = false;
 
             ConnectButton.Title = "Connect";
             SendButton.Enabled = false;
@@ -236,13 +237,13 @@ namespace MutliChatClient
             EnteredName.Editable = false;
             EnteredIPAddress.Editable = false;
             EnteredPort.Editable = false;
-            EnteredBufferSize.Editable = false;
+            UpdateBufferButton.Enabled = true;
 
             ConnectButton.Title = "Disconnect";
             SendButton.Enabled = true;
             View.Window.Title = "MultiChat Client - Connected";
         }
-        
+
         // SendMessage is the button handler for the send button, and it gets called when the user presses "enter" in 
         // the message field. 
         // When the entered message is not empty, and the server is connected, it empties the field and it sends the
@@ -262,6 +263,14 @@ namespace MutliChatClient
 
                 await Messaging.SendMessage(message, _ns);
             }
+        }
+
+        // UpdateBufferSize is the action handler that updates the buffer size.
+        partial void UpdateBufferSize(NSObject sender)
+        {
+            var bufferSize = Messaging.UpdateBufferSize(EnteredBufferSize.StringValue.Trim(), _username,
+                _chatListDataSource, ChatList);
+            _bufferSize = bufferSize;
         }
     }
 }

@@ -109,29 +109,6 @@ namespace MultiChatServer
                             break;
                         }
 
-                        var clientBufferSize = -1;
-
-                        try
-                        {
-                            clientBufferSize = Int32.Parse(message.content);
-                        }
-                        catch (FormatException)
-                        {
-                        }
-
-                        if (clientBufferSize != _bufferSize) // TODO remove
-                        {
-                            var bufferMismatchMessage = new Message(MessageType.Error, $"{_serverName}",
-                                "The buffer size you entered is either invalid or doesn't match the server buffer size.",
-                                DateTime.Now);
-                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName}",
-                                $"A user ({message.sender}) with mismatching buffer size of {_bufferSize} was denied to connect.",
-                                DateTime.Now);
-                            await Messaging.SendMessage(bufferMismatchMessage, stream);
-                            UI.AddMessage(serverInfoMessage, _chatListDataSource, ChatList);
-                            break;
-                        }
-
                         _connectedStreams.Add(stream);
                         AddClient(message.sender);
 
@@ -199,6 +176,7 @@ namespace MultiChatServer
             AddClient(noClients);
 
             EnteredBufferSize.StringValue = "1024";
+            UpdateBufferSizeButton.Enabled = false;
         }
 
         // StartServer is the button handler that is called when the connect-disconnect button is clicked.
@@ -300,8 +278,8 @@ namespace MultiChatServer
             EnteredServerName.Editable = false;
             EnteredServerIP.Editable = false;
             EnteredServerPort.Editable = false;
-            EnteredBufferSize.Editable = false;
             StartStopButton.Title = "Stop Server";
+            UpdateBufferSizeButton.Enabled = true;
             View.Window.Title = "MultiChat Server - Server Started";
         }
 
@@ -317,8 +295,8 @@ namespace MultiChatServer
             EnteredServerName.Editable = true;
             EnteredServerIP.Editable = true;
             EnteredServerPort.Editable = true;
-            EnteredBufferSize.Editable = true;
             StartStopButton.Title = "Start Server";
+            UpdateBufferSizeButton.Enabled = false;
 
             _clientListDataSource.Clients.Clear();
             View.Window.Title = "MultiChat Server";
@@ -343,6 +321,14 @@ namespace MultiChatServer
 
                 await BroadcastMessage(message);
             }
+        }
+
+        // Updatebuffersize is the action handler that updates the buffer size.
+        partial void UpdateBuffersize(NSObject sender)
+        {
+            var bufferSize = Messaging.UpdateBufferSize(EnteredBufferSize.StringValue.Trim(), _serverName,
+                _chatListDataSource, ChatList);
+            _bufferSize = bufferSize;
         }
     }
 }

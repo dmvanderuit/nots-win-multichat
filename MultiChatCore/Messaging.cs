@@ -1,6 +1,8 @@
+using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using AppKit;
 using MultiChatCore.model;
 
 namespace MultiChatCore
@@ -14,6 +16,26 @@ namespace MultiChatCore
         {
             var buffer = Encoding.ASCII.GetBytes(message.ToJson() + "@");
             await ns.WriteAsync(buffer, 0, buffer.Length);
+        }
+
+        // UpdateBufferSize updates the buffer size and adds an info message to the chatlist. 
+        public static int UpdateBufferSize(string enteredBufferSizeString, string name,
+            ChatListDataSource chatListDataSource, NSTableView chatList)
+        {
+            try
+            {
+                var enteredBufferSize = Validation.ValidateBufferSize(enteredBufferSizeString);
+                var message = new Message(MessageType.Info, name,
+                    $"The buffer size was changed to {enteredBufferSize}.", DateTime.Now);
+                UI.AddMessage(message, chatListDataSource, chatList);
+                return enteredBufferSize;
+            }
+            catch (InvalidInputException e)
+            {
+                UI.ShowAlert(e.Title,
+                    e.Message);
+                return 0;
+            }
         }
     }
 }

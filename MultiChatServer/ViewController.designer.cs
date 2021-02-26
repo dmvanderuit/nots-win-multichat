@@ -48,12 +48,18 @@ namespace MultiChatServer
 
 		[Outlet]
 		AppKit.NSButton StartStopButton { get; set; }
+		
+		[Outlet]
+		AppKit.NSButton UpdateBufferSizeButton { get; set; }
 
 		[Action ("SendMessage:")]
 		partial void SendMessage (Foundation.NSObject sender);
 
 		[Action ("StartServer:")]
-		partial void StartServer (Foundation.NSObject sender);
+		partial void StartServer (Foundation.NSObject sender);		
+		
+		[Action ("UpdateBufferSize:")]
+		partial void UpdateBuffersize (Foundation.NSObject sender);
 
 		void ReleaseDesignerOutlets ()
 		{
