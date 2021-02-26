@@ -21,21 +21,9 @@ namespace MultiChatServer
         private TcpListener _tcpListener;
         private int _bufferSize;
 
-        private void AddMessage(Message message)
-        {
-            if (_chatListDataSource.Messages.Count > 0 &&
-                _chatListDataSource.Messages[0].content.Contains("No messages yet"))
-            {
-                _chatListDataSource.Messages.RemoveAt(0);
-                ChatList.StringValue = "";
-            }
-
-
-            _chatListDataSource.Messages.Add(message);
-            ChatList.ReloadData();
-            ChatList.ScrollRowToVisible(_chatListDataSource.Messages.Count - 1);
-        }
-
+        // AddClient adds a new client to the list. When the only entry in the list is "No clients yet",
+        // the app removes that entry. When the client is added to the datasource, the ClientList gets reloaded
+        // and the ClientList scrolls to the last visible row.
         private void AddClient(String username)
         {
             if (_clientListDataSource.Clients.Count > 0 &&
@@ -49,6 +37,9 @@ namespace MultiChatServer
             ClientList.ScrollRowToVisible(_clientListDataSource.Clients.Count - 1);
         }
 
+        // RemoveClient removes a client from the list of connected clients. When the list is empty after
+        // removing the client, "No clients yet" will be added to the list as an info message. After this,
+        // the function also reloads the data and scrolls to the bottom, like in the method above.
         private void RemoveClient(String username)
         {
             _clientListDataSource.Clients.Remove(username);
@@ -64,6 +55,11 @@ namespace MultiChatServer
             ClientList.ScrollRowToVisible(_clientListDataSource.Clients.Count - 1);
         }
 
+        // ReceiveData receives the data from a client. It fetches the stream from the TCPClient, then, while the
+        // server is started, it read the messages that the stream sends. When the messageContent equals the "@"
+        // character, we know the message is done. 
+        // The function now parses the message (without the @ sign) to the Message class (the message is in JSON).
+        // The message type is determined and depending on the type the message gets processed.
         private async Task ReceiveData(TcpClient client)
         {
             var stream = client.GetStream();
@@ -85,23 +81,31 @@ namespace MultiChatServer
 
                 switch (message.type)
                 {
+                    // In case the message-type is disconnect, the client sending the message wants to leave
+                    // the server. In this case, we remove the client's stream from the list of streams. We remove the
+                    // client from the list of connected clients and we broadcast a message to all other users saying
+                    // that the user has left the server.
                     case MessageType.Disconnect:
                         _connectedStreams.Remove(stream);
                         RemoveClient(message.sender);
-                        var leftMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                        var leftMessage = new Message(MessageType.Info, $"{_serverName}",
                             $"{message.sender} just left the server.", DateTime.Now);
 
                         await BroadcastMessage(leftMessage);
                         break;
+                    // In case the message-type is handshake, the client sending the message wants to connect to the
+                    // server. When this is the case, we check if the name of the client isn't already in use. 
+                    // If the name isn't in use, we add the stream to the list of connected streams and we broadcast
+                    // a message saying the user has joined.
                     case MessageType.Handshake:
                         if (_clientListDataSource.Clients.Contains(message.sender))
                         {
-                            var duplicateNameMessage = new Message(MessageType.Error, $"{_serverName} (server)",
+                            var duplicateNameMessage = new Message(MessageType.Error, $"{_serverName}",
                                 "The username you are trying to connect with is already in use.", DateTime.Now);
-                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName}",
                                 $"A user with duplicate name {message.sender} was denied to connect.", DateTime.Now);
                             await Messaging.SendMessage(duplicateNameMessage, stream);
-                            AddMessage(serverInfoMessage);
+                            UI.AddMessage(serverInfoMessage, _chatListDataSource, ChatList);
                             break;
                         }
 
@@ -115,26 +119,27 @@ namespace MultiChatServer
                         {
                         }
 
-                        if (clientBufferSize != _bufferSize)
+                        if (clientBufferSize != _bufferSize) // TODO remove
                         {
-                            var bufferMismatchMessage = new Message(MessageType.Error, $"{_serverName} (server)",
+                            var bufferMismatchMessage = new Message(MessageType.Error, $"{_serverName}",
                                 "The buffer size you entered is either invalid or doesn't match the server buffer size.",
                                 DateTime.Now);
-                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                            var serverInfoMessage = new Message(MessageType.Info, $"{_serverName}",
                                 $"A user ({message.sender}) with mismatching buffer size of {_bufferSize} was denied to connect.",
                                 DateTime.Now);
                             await Messaging.SendMessage(bufferMismatchMessage, stream);
-                            AddMessage(serverInfoMessage);
+                            UI.AddMessage(serverInfoMessage, _chatListDataSource, ChatList);
                             break;
                         }
 
                         _connectedStreams.Add(stream);
                         AddClient(message.sender);
 
-                        var joinedMessage = new Message(MessageType.Info, $"{_serverName} (server)",
+                        var joinedMessage = new Message(MessageType.Info, $"{_serverName}",
                             $"{message.sender} just joined the server!", DateTime.Now);
                         await BroadcastMessage(joinedMessage);
                         break;
+                    // In any other case, we simply broadcast the message to all users.
                     default:
                         await BroadcastMessage(message);
                         break;
@@ -142,9 +147,11 @@ namespace MultiChatServer
             }
         }
 
+        // BroadcastMessage first adds the given message to the server UI. After that, it loops through all connected
+        // network streams and send the message to each individual client.
         private async Task BroadcastMessage(Message message)
         {
-            AddMessage(message);
+            UI.AddMessage(message, _chatListDataSource, ChatList);
             foreach (var connectedStream in _connectedStreams)
             {
                 await Messaging.SendMessage(message, connectedStream);
@@ -155,6 +162,19 @@ namespace MultiChatServer
         {
         }
 
+        // ViewWillAppear is the initializing method that sets the window's title.
+        public override void ViewWillAppear()
+        {
+            base.ViewWillAppear();
+            View.Window.Title = "MultiChat Server";
+        }
+
+        // In AwakeFromNib a lot of setup is done for the server. The first sections cover the setup for the list
+        // of chats and the list of clients. It creates a new DataSource that holds all necessary information
+        // for the list (holding a list of items and providing the amount of rows). After that, a delegate is 
+        // instantiated, containing some logic behind the lists.
+        // After this, a message is added that no messages are present yet. The same is done for the clients. 
+        // The default buffer size value is also inserted into the input field.
         public override void AwakeFromNib()
         {
             base.AwakeFromNib();
@@ -175,61 +195,31 @@ namespace MultiChatServer
 
             var noClients = "No clients yet";
 
-            AddMessage(noMessages);
+            UI.AddMessage(noMessages, _chatListDataSource, ChatList);
             AddClient(noClients);
 
             EnteredBufferSize.StringValue = "1024";
         }
 
+        // StartServer is the button handler that is called when the connect-disconnect button is clicked.
+        // In this method we validate all fields need validation. When validation fails, a custom exception
+        // (InvalidInputException) is thrown and an alert is shown based on the exception. 
+        // If all is well, we start the server. If it is already started, we stop it.
         async partial void StartServer(NSObject sender)
         {
-            var enteredServerName = EnteredServerName.StringValue.Trim();
-            var enteredBufferSize = EnteredBufferSize.StringValue.Trim();
             int enteredPort;
 
-            if (enteredServerName == "")
-            {
-                UI.ShowAlert("Provide server name", "Please provide a server name in order to start the server.");
-                return;
-            }
-
-            _serverName = enteredServerName;
-
-            // Port validation
             try
             {
-                enteredPort = Int32.Parse(EnteredServerPort.StringValue.Trim());
+                _serverName =
+                    Validation.ValidateName(EnteredServerName.StringValue.Trim(), Validation.NameTypes.Server);
+                enteredPort = Validation.ValidatePort(EnteredServerPort.StringValue.Trim());
+                _bufferSize = Validation.ValidateBufferSize(EnteredBufferSize.StringValue.Trim());
             }
-            catch (FormatException)
+            catch (InvalidInputException e)
             {
-                UI.ShowAlert("Invalid server port",
-                    "The port you entered was invalid. Please make sure the port is a numeric value.");
-                return;
-            }
-
-            if (enteredPort == -1)
-            {
-                UI.ShowAlert("Provide server port",
-                    "Please provide a server port in order to connect to the server.");
-                return;
-            }
-
-            // Buffersize validation
-            try
-            {
-                _bufferSize = Int32.Parse(enteredBufferSize);
-            }
-            catch (FormatException)
-            {
-                UI.ShowAlert("Invalid server buffer size",
-                    "The buffer size you entered is likely not a number. Please enter a valid number.");
-                return;
-            }
-
-            if (enteredBufferSize == "" || _bufferSize <= 0)
-            {
-                UI.ShowAlert("Provide buffer size",
-                    "Please provide a positive buffer size in order to connect to the server.");
+                UI.ShowAlert(e.Title,
+                    e.Message);
                 return;
             }
 
@@ -243,10 +233,13 @@ namespace MultiChatServer
             }
         }
 
+        // StopServer stops the server. It broadcasts a message with the special "ServerStopped" type, telling all clients
+        // to disconnect. It empties the list of connected streams, it stops the TCP listener and it sets the server
+        // as stopped.
         private async Task StopServer()
         {
             var globalStoppedMessage = new Message(
-                MessageType.ServerStopped, $"{_serverName} (server)", "The server was stopped.", DateTime.Now);
+                MessageType.ServerStopped, $"{_serverName}", "The server was stopped.", DateTime.Now);
             await BroadcastMessage(globalStoppedMessage);
 
             _connectedStreams.Clear();
@@ -255,6 +248,13 @@ namespace MultiChatServer
             SetServerStopped();
         }
 
+        // StartServer handles everything that needs handling when the server is starting. This might be the most
+        // important method of the server application. 
+        // Firstly, it calls the method that handles the UI. After that, it starts the tcpListener on the given port.
+        // If that throws a socketException, we know the IP is in use and we show the user that. We stop the server
+        // when this exception is thrown.
+        // After this, we show the message that the server is listening for new clients. While the server is started,
+        // we accept clients (asynchronously) and we receive the data.
         private async Task StartServer(int enteredPort)
         {
             SetServerStarted();
@@ -274,7 +274,7 @@ namespace MultiChatServer
                 "System",
                 "Server started and listening for clients",
                 DateTime.Now);
-            AddMessage(listeningMessage);
+            UI.AddMessage(listeningMessage, _chatListDataSource, ChatList);
 
             while (_serverStarted)
             {
@@ -291,6 +291,7 @@ namespace MultiChatServer
             }
         }
 
+        // SetServerStarted handles all UI when the server is started.
         private void SetServerStarted()
         {
             _serverStarted = true;
@@ -298,8 +299,12 @@ namespace MultiChatServer
             EnteredServerPort.Editable = false;
             EnteredBufferSize.Editable = false;
             StartStopButton.Title = "Stop Server";
+            View.Window.Title = "MultiChat Server - Server Started";
         }
 
+        // SetServerStopped returns the application to "cold and dark" state meaning that when this method is called,
+        // everything will be as it was when it first started. After this method, we'll be able to start the server
+        // again.
         private void SetServerStopped()
         {
             _serverStarted = false;
@@ -310,8 +315,15 @@ namespace MultiChatServer
             EnteredServerPort.Editable = true;
             EnteredBufferSize.Editable = true;
             StartStopButton.Title = "Start Server";
+
+            _clientListDataSource.Clients.Clear();
+            View.Window.Title = "MultiChat Server";
         }
 
+        // SendMessage gets the entered message in the message field. If this contains anything and the server is
+        // started, we clear the field and broadcast the message.
+        // This method is the button handler for the send button, and it gets called when the user presses "enter"
+        // in the input field.
         async partial void SendMessage(NSObject sender)
         {
             var messageContent = EnteredMessage.StringValue;

@@ -4,6 +4,7 @@ using AppKit;
 
 namespace MultiChatServer
 {
+    // This class handles the data in the client list.
     public class ClientListDataSource : NSTableViewDataSource
     {
         public List<string> Clients = new List<string>();

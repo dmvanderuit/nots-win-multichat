@@ -48,10 +48,14 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="ChatListDelegate.cs" />
+        <Compile Include="Messaging.cs" />
         <Compile Include="MultiChatCore.cs" />
         <Compile Include="model\Message.cs" />
         <Compile Include="ChatListDataSource.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="Serialization.cs" />
+        <Compile Include="UI.cs" />
+        <Compile Include="Validation.cs" />
     </ItemGroup>
     <ItemGroup>
       <None Include="packages.config" />

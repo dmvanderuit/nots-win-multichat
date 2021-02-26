@@ -3,6 +3,8 @@ using AppKit;
 
 namespace MultiChatServer
 {
+    // ClientListDelegate handles the logic of the Client List. This class is similar to ChatListDelegate in MultiChat
+    // Core, but this class is slightly simpler.
     public class ClientListDelegate : NSTableViewDelegate
     {
         private const string CellIdentifier = "ClientCell";

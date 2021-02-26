@@ -3,6 +3,7 @@ using AppKit;
 
 namespace MultiChatCore
 {
+    // ChatListDelegate handles the logic in the ChatList. 
     public class ChatListDelegate : NSTableViewDelegate
     {
         private const string CellIdentifier = "ChatCell";
@@ -27,6 +28,8 @@ namespace MultiChatCore
                 view.Editable = false;
             }
 
+            // In this switch we fill the fields. For each message, we fill the "sender" column with the sender
+            // field in the message class. We fill the "message" column with the content property.
             switch (tableColumn.Title)
             {
                 case "Sender":
