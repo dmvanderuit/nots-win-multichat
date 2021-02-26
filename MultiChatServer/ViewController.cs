@@ -323,6 +323,7 @@ namespace MultiChatServer
             }
         }
 
+        // Updatebuffersize is the action handler that updates the buffer size.
         partial void UpdateBuffersize(NSObject sender)
         {
             var bufferSize = Messaging.UpdateBufferSize(EnteredBufferSize.StringValue.Trim(), _serverName,

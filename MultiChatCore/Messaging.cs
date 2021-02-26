@@ -18,6 +18,7 @@ namespace MultiChatCore
             await ns.WriteAsync(buffer, 0, buffer.Length);
         }
 
+        // UpdateBufferSize updates the buffer size and adds an info message to the chatlist. 
         public static int UpdateBufferSize(string enteredBufferSizeString, string name,
             ChatListDataSource chatListDataSource, NSTableView chatList)
         {
