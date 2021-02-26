@@ -176,6 +176,7 @@ namespace MultiChatServer
             AddClient(noClients);
 
             EnteredBufferSize.StringValue = "1024";
+            UpdateBufferSizeButton.Enabled = false;
         }
 
         // StartServer is the button handler that is called when the connect-disconnect button is clicked.
@@ -277,8 +278,8 @@ namespace MultiChatServer
             EnteredServerName.Editable = false;
             EnteredServerIP.Editable = false;
             EnteredServerPort.Editable = false;
-            EnteredBufferSize.Editable = false;
             StartStopButton.Title = "Stop Server";
+            UpdateBufferSizeButton.Enabled = true;
             View.Window.Title = "MultiChat Server - Server Started";
         }
 
@@ -294,8 +295,8 @@ namespace MultiChatServer
             EnteredServerName.Editable = true;
             EnteredServerIP.Editable = true;
             EnteredServerPort.Editable = true;
-            EnteredBufferSize.Editable = true;
             StartStopButton.Title = "Start Server";
+            UpdateBufferSizeButton.Enabled = false;
 
             _clientListDataSource.Clients.Clear();
             View.Window.Title = "MultiChat Server";
@@ -319,6 +320,25 @@ namespace MultiChatServer
                     DateTime.Now);
 
                 await BroadcastMessage(message);
+            }
+        }
+
+        partial void UpdateBuffersize(NSObject sender)
+        {
+            int enteredBufferSize;
+
+            try
+            {
+                enteredBufferSize = Validation.ValidateBufferSize(EnteredBufferSize.StringValue.Trim());
+                _bufferSize = enteredBufferSize;
+                var message = new Message(MessageType.Info, _serverName,
+                    $"The buffer size was changed to {enteredBufferSize}.", DateTime.Now);
+                UI.AddMessage(message, _chatListDataSource, ChatList);
+            }
+            catch (InvalidInputException e)
+            {
+                UI.ShowAlert(e.Title,
+                    e.Message);
             }
         }
     }
