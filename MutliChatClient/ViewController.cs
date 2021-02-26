@@ -21,6 +21,8 @@ namespace MutliChatClient
         private bool _isConnected;
 
 
+        // While the client is connected to the server, this method reads the data from the networkstream. The size of
+        // the buffer is determined by the user's input. 
         private async Task ReceiveData(TcpClient client)
         {
             while (_isConnected)
@@ -28,18 +30,25 @@ namespace MutliChatClient
                 var readBytes = new byte[_bufferSize];
                 var messageContent = "";
 
+                // While the content does not contain the end marker, it keeps reading and adding to the messageContent
+                // string. 
                 while (messageContent.IndexOf("@") < 0)
                 {
                     var receivedBytes = await _ns.ReadAsync(readBytes, 0, readBytes.Length);
                     messageContent += Encoding.ASCII.GetString(readBytes, 0, receivedBytes);
                 }
 
+                // When the end marker is received, the message is complete. End marker is removed.
                 var finalMessageContent = messageContent.Substring(0, messageContent.IndexOf("@"));
 
+                // After removing the end marker, we serialize the received string - which is in JSON - to a Message.
                 var message = Serialization.Deserialize(finalMessageContent);
 
+                // We add the message to the list of messages.
                 UI.AddMessage(message, _chatListDataSource, ChatList);
 
+                // If the message has the type "ServerStopped", we set the networkstream to null and we disconnect from
+                // the server.
                 if (message.type == MessageType.ServerStopped)
                 {
                     _ns = null;
@@ -53,6 +62,16 @@ namespace MutliChatClient
         {
         }
 
+        // ViewWillAppear handles the initial window title value.
+        public override void ViewWillAppear()
+        {
+            base.ViewWillAppear();
+            View.Window.Title = "MultiChat Server";
+        }
+
+        // AwakeFromNib handles the initial setup of the ChatList. It also adds the initial placeholder message.
+        // Finally, it sets the send button to be disabled, because the server isn't connected yet, and it enters the 
+        // placeholder buffer size in the input field. 
         public override void AwakeFromNib()
         {
             base.AwakeFromNib();
@@ -72,6 +91,9 @@ namespace MutliChatClient
             EnteredBufferSize.StringValue = "1024";
         }
 
+        // Connect is the button handler for the connect button. It validates all input fields and shows a UI alert when
+        // validation fails. If the client isn't connected yet, we try to connect. If it's already connected, we 
+        // disconnect from the server.
         async partial void Connect(NSObject sender)
         {
             IPAddress serverIp;
@@ -95,7 +117,15 @@ namespace MutliChatClient
 
             if (!_isConnected)
             {
-                await ConnectToServer(serverIp, enteredPort, enteredBufferSize.ToString());
+                try
+                {
+                    await ConnectToServer(serverIp, enteredPort, enteredBufferSize.ToString());
+                }
+                catch (SocketException e)
+                {
+                    UI.ShowExceptionAlert("An error occured connecting to the server.", e);
+                    await DisconnectFromServer();
+                }
             }
             else
             {
@@ -103,6 +133,9 @@ namespace MutliChatClient
             }
         }
 
+        // In DisconnectFromServer we send a message to the server saying we want to quit the server. The server then
+        // handles some things on their side, and we show a message to the client that we're successfully disconnected.
+        // After that, we set the networkstream to null and we handle the rest of the UI in a separate method.
         private async Task DisconnectFromServer()
         {
             var message = new Message(
@@ -124,12 +157,18 @@ namespace MutliChatClient
             SetDisconnected();
         }
 
+        // ConnectToServer is the heart of the client application. It starts a new TCPClient and it connects to it. 
+        // It adds the notification that the server has been started. After that, while it is connected, it gets the
+        // network stream and it send the connecting message, telling the server that it wants to connect.
+        // It receives data and handles that in a separate method.
+        // When anything goes wrong, we stop the server gracefully. 
         private async Task ConnectToServer(IPAddress serverIp, int enteredPort, string bufferSize)
         {
             try
             {
-                using (var tcpClient = new TcpClient(serverIp.ToString(), enteredPort)
-                )
+                var tcpClient = new TcpClient();
+                await tcpClient.ConnectAsync(serverIp.ToString(), enteredPort);
+                using (tcpClient)
                 {
                     SetConnected();
                     var connectedMessage = new Message(
@@ -170,6 +209,8 @@ namespace MutliChatClient
             }
         }
 
+        // SetDisconnected makes sure everything is set back to the original value to make it possible to connect
+        // to the server again. It also manipulates the UI so that it can be connected to the server again.
         private void SetDisconnected()
         {
             _isConnected = false;
@@ -183,8 +224,12 @@ namespace MutliChatClient
 
             ConnectButton.Title = "Connect";
             SendButton.Enabled = false;
+            View.Window.Title = "MultiChat Client";
         }
 
+        // SetConnected manipulates the UI so that it is not possible to change the server details when you're already
+        // connected. It also sets the _isConnected to true, which is an important variable as it determines whether the
+        // client should receive/send data or not.
         private void SetConnected()
         {
             _isConnected = true;
@@ -195,9 +240,13 @@ namespace MutliChatClient
 
             ConnectButton.Title = "Disconnect";
             SendButton.Enabled = true;
+            View.Window.Title = "MultiChat Client - Connected";
         }
-
-
+        
+        // SendMessage is the button handler for the send button, and it gets called when the user presses "enter" in 
+        // the message field. 
+        // When the entered message is not empty, and the server is connected, it empties the field and it sends the
+        // message to the server.
         async partial void SendMessage(NSObject sender)
         {
             var messageContent = EnteredMessage.StringValue;

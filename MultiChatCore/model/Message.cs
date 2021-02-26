@@ -4,14 +4,15 @@ using Newtonsoft.Json;
 
 namespace MultiChatCore.model
 {
+    // MessageType contains all the message types the application uses. 
     public enum MessageType
     {
-        Handshake,
-        Disconnect,
-        Error,
-        ServerStopped,
-        Message,
-        Info
+        Handshake, // Handshake is the type used by clients registering with a new server
+        Disconnect, // Disconnect is the type used by clients to tell the server they are leaving 
+        Error, // Error is used when something goes wrong in the server, e.g. the username already exists
+        ServerStopped, // ServerStopped is the type the server sends to all clients when it is stopping
+        Message, // Message is the regular message type a client or the server sends
+        Info // Info is a generic message type, typically not seen by anyone but the client or server itself
     }
 
     public class Message
@@ -27,24 +28,6 @@ namespace MultiChatCore.model
             this.sender = sender;
             this.content = content;
             this.time = time;
-        }
-
-        public override string ToString()
-        {
-            var stringBuilder = new StringBuilder();
-
-            if (type == MessageType.Message)
-            {
-                stringBuilder.Append($"{sender} ({time:hh:mm:ss})\t|");
-            }
-            else
-            {
-                stringBuilder.Append($"{time:hh:mm:ss}\t|");
-            }
-
-            stringBuilder.Append(content);
-
-            return stringBuilder.ToString();
         }
 
         public string ToJson()

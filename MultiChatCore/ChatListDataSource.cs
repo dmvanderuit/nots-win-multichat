@@ -5,6 +5,7 @@ using MultiChatCore.model;
 
 namespace MultiChatCore
 {
+    // ChatListDataSource is the datasource for the ChatList table.
     public class ChatListDataSource : NSTableViewDataSource
     {
         public List<Message> Messages = new List<Message>();
