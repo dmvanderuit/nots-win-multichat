@@ -66,7 +66,7 @@ namespace MutliChatClient
         public override void ViewWillAppear()
         {
             base.ViewWillAppear();
-            View.Window.Title = "MultiChat Server";
+            View.Window.Title = "MultiChat Client";
         }
 
         // AwakeFromNib handles the initial setup of the ChatList. It also adds the initial placeholder message.
@@ -103,7 +103,7 @@ namespace MutliChatClient
             try
             {
                 _username = Validation.ValidateName(EnteredName.StringValue.Trim(), Validation.NameTypes.Client);
-                serverIp = Validation.ValidateIp(EnteredIPAddress.StringValue.Trim());
+                serverIp = Validation.ValidateIp(EnteredIPAddress.StringValue.Trim(), Validation.NameTypes.Client);
                 enteredPort = Validation.ValidatePort(EnteredPort.StringValue.Trim());
                 enteredBufferSize = Validation.ValidateBufferSize(EnteredBufferSize.StringValue.Trim());
                 _bufferSize = enteredBufferSize;
